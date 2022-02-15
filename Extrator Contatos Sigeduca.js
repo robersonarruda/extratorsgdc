@@ -10,6 +10,7 @@
 // @updateURL    https://github.com/robersonarruda/extratorsgdc/raw/main/Extrator%20Contatos%20Sigeduca.js
 // @include	*sigeduca.seduc.mt.gov.br/ged/hwmconaluno.aspx*
 // @copyright  2019, Roberson Arruda (robersonarruda@outlook.com)
+// @grant    none
 // ==/UserScript==
 
 
