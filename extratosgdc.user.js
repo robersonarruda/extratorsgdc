@@ -1,14 +1,15 @@
 // ==UserScript==
-// @name       Extrator Contatos Sigeduca
+// @name          Extrator Contatos Sigeduca
 // @fullname      Extrator Contatos Sigeduca
-// @version    1.4.0.2
-// @description  Consulta e salva dados de contato dos alunos do sigeduca.
-// @author       Roberson Arruda
+// @version       1.4.0.2
+// @description   Consulta e salva dados de contato dos alunos do sigeduca.
+// @author        Roberson Arruda
+// @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
 // @downloadURL   https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
-// @updateURL    https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
-// @include	*sigeduca.seduc.mt.gov.br/ged/hwmconaluno.aspx*
-// @copyright  2019, Roberson Arruda (robersonarruda@outlook.com)
-// @grant    none
+// @updateURL     https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
+// @include	      *sigeduca.seduc.mt.gov.br/ged/hwmconaluno.aspx*
+// @copyright     2019, Roberson Arruda (robersonarruda@outlook.com)
+// @grant         none
 // ==/UserScript==
 
 
