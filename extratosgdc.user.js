@@ -4,8 +4,8 @@
 // @version    1.4.0.1
 // @description  Consulta e salva dados de contato dos alunos do sigeduca.
 // @author       Roberson Arruda
-// @downloadURL   https://github.com/robersonarruda/extratorsgdc/raw/main/Extrator%20Contatos%20Sigeduca.js
-// @updateURL    https://github.com/robersonarruda/extratorsgdc/raw/main/Extrator%20Contatos%20Sigeduca.js
+// @downloadURL   https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
+// @updateURL    https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
 // @include	*sigeduca.seduc.mt.gov.br/ged/hwmconaluno.aspx*
 // @copyright  2019, Roberson Arruda (robersonarruda@outlook.com)
 // @grant    none
