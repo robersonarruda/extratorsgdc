@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name       Extrator Contatos Sigeduca
 // @fullname      Extrator Contatos Sigeduca
-// @version    1.4.0.0
+// @version    1.4.0.1
 // @description  Consulta e salva dados de contato dos alunos do sigeduca.
 // @author       Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/Extrator%20Contatos%20Sigeduca.js
