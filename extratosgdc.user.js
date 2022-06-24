@@ -197,7 +197,7 @@ function coletaDados1() {
         }
     }
     if(n >= vetAluno.length){
-        navigator.clipboard.writeText(txtareaDados.value);
+        //navigator.clipboard.writeText(txtareaDados.value); ERRO
         txtareaDados.select();
         alert('finalizado');
     }
