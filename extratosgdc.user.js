@@ -248,7 +248,7 @@ ifrIframe1.setAttribute("style","height: 100px; width: 355px; display:none");
 divCredit.appendChild(ifrIframe1);
 
 //TEXTO CÓDIGO ALUNO
-var textCodAluno = document.createTextNode("CÓDIGO DO ALUNO");
+var textCodAluno = document.createTextNode("INFORME OS CÓDIGOS DOS ALUNOS");
 divCredit.appendChild(textCodAluno);
 
 //textarea alunos a serem pesquisados
