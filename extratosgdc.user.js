@@ -299,6 +299,7 @@ txtareaDados.setAttribute('name','txtDados');
 txtareaDados.setAttribute('id','txtDados');
 txtareaDados.setAttribute('value','');
 txtareaDados.setAttribute('style','border:1px solid #000000;width: 355px;height: 150px; resize: none');
+txtareaDados.readOnly = true;
 divCredit.appendChild(txtareaDados);
 
 //BOTAO SALVAR EM TXT
