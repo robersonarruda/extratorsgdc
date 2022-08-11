@@ -222,7 +222,7 @@ var exibir = '$("#credito1").slideToggle();if(this.value=="MINIMIZAR"){this.valu
 var btnExibir = document.createElement('input');
     btnExibir.setAttribute('type','button');
     btnExibir.setAttribute('id','exibir1');
-    btnExibir.setAttribute('value','ESCONDER');
+    btnExibir.setAttribute('value','MINIMIZAR');
     btnExibir.setAttribute('class','menuSCT');
     btnExibir.setAttribute('style','background:#FF3300; width: 187px; border: 1px solid rgb(0, 0, 0); position: fixed; z-index: 2002; bottom: 0px; right: 30px;');
     btnExibir.setAttribute('onmouseover', 'this.style.backgroundColor = "#FF7A00"');
