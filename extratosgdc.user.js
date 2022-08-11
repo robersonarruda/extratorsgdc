@@ -123,7 +123,7 @@ function coletaDados1() {
     if(n < vetAluno.length){
         //Dados gerais do Aluno
         a = a + vetAluno[n] +";"; cabecalho = "Cod Aluno;"; //Cod Aluno
-        a = a + parent.frames[0].document.getElementById('span_CTLGEDALUIDINEP').innerHTML +";"; cabecalho = cabecalho+"Matrícula INEP;"; //Matrícula INEP
+        a = a + parent.frames[0].document.getElementById('span_CTLGEDALUIDINEP').innerHTML +";"; cabecalho = cabecalho+"Nº INEP;"; //Matrícula INEP
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESNOM').innerHTML +";"; cabecalho = cabecalho+"Aluno;";
         a = a + parent.frames[0].document.getElementById('CTLGERPESCPF').innerHTML.replace(/^([\d]{3})([\d]{3})([\d]{3})([\d]{2})$/, "$1.$2.$3-$4") +";"; cabecalho = cabecalho+"CPF do Aluno;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESRG').innerHTML +";"; cabecalho = cabecalho+"RG do aluno;";
