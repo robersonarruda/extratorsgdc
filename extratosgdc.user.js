@@ -217,8 +217,8 @@ function coletaDados2() {
     }
 }
 
-//BOTÃO EXIBIR ou ESCONDER
-var exibir = '$("#credito1").slideToggle();if(this.value=="ESCONDER"){this.value="EXIBIR"}else{this.value="ESCONDER"}';
+//BOTÃO EXIBIR ou MINIMIZAR
+var exibir = '$("#credito1").slideToggle();if(this.value=="MINIMIZAR"){this.value="ABRIR"}else{this.value="MINIMIZAR"}';
 var btnExibir = document.createElement('input');
     btnExibir.setAttribute('type','button');
     btnExibir.setAttribute('id','exibir1');
