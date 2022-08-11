@@ -123,13 +123,13 @@ function coletaDados1() {
     if(n < vetAluno.length){
         //Dados gerais do Aluno
         a = a + vetAluno[n] +";"; cabecalho = "Cod Aluno;"; //Cod Aluno
-        a = a + parent.frames[0].document.getElementById('span_CTLGEDALUIDINEP').innerHTML +";"; cabecalho = cabecalho+"MAT INEP;"; //Matrícula INEP
-        a = a + parent.frames[0].document.getElementById('span_CTLGERPESNOM').innerHTML +";"; cabecalho = cabecalho+"Nome Aluno;";
+        a = a + parent.frames[0].document.getElementById('span_CTLGEDALUIDINEP').innerHTML +";"; cabecalho = cabecalho+"Matrícula INEP;"; //Matrícula INEP
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESNOM').innerHTML +";"; cabecalho = cabecalho+"Aluno;";
         a = a + parent.frames[0].document.getElementById('CTLGERPESCPF').innerHTML.replace(/^([\d]{3})([\d]{3})([\d]{3})([\d]{2})$/, "$1.$2.$3-$4") +";"; cabecalho = cabecalho+"CPF do Aluno;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESRG').innerHTML +";"; cabecalho = cabecalho+"RG do aluno;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERORGEMICOD').innerHTML +";"; cabecalho = cabecalho+"Órgão Expedidor;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESSEXO').innerHTML +";"; cabecalho = cabecalho+"Sexo do Aluno;";
-        a = a + parent.frames[0].document.getElementById('span_CTLGERPESDTANASC').innerHTML +";"; cabecalho = cabecalho+"Data Nascimento;";
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESDTANASC').innerHTML +";"; cabecalho = cabecalho+"Data de Nascimento;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESNATDSC').innerHTML +";"; cabecalho = cabecalho+"Naturalidade;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESNATUF').innerHTML +";"; cabecalho = cabecalho+"UF;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESNOMMAE').innerHTML +";"; cabecalho = cabecalho+"Filiação 1;";
@@ -172,8 +172,8 @@ function coletaDados1() {
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESTELCON').innerHTML+";"; cabecalho = cabecalho+"Tel Contato;";
 
         //Endereço
-        a = a + parent.frames[0].document.getElementById('span_CTLGERPESEND').innerHTML+";"; cabecalho = cabecalho+"Endereco Rua;";
-        a = a + parent.frames[0].document.getElementById('span_CTLGERPESNMRLOG').innerHTML+";"; cabecalho = cabecalho+"Numero;";
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESEND').innerHTML+";"; cabecalho = cabecalho+"Endereço Rua;";
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESNMRLOG').innerHTML+";"; cabecalho = cabecalho+"Número;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESCMPLOG').innerHTML+";"; cabecalho = cabecalho+"Complemento;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESBAIRRO').innerHTML+";"; cabecalho = cabecalho+"Bairro;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESENDCIDDSC').innerHTML+";"; cabecalho = cabecalho+"Cidade;";
