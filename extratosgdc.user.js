@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
 // @fullname      Extrator Contatos Sigeduca
-// @version       2.1.1
+// @version       2.1.2
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -73,7 +73,7 @@ function saveTextAsFile() {
     var a = document.createElement('a');
     with (a) {
         var href='data:text/csv;base64,' + btoa(conteudo);
-        var download= 'dados.csv';
+        var download= 'dadosGED.csv';
     }
     document.body.appendChild(a);
     a.click();
@@ -269,7 +269,7 @@ divCredit.appendChild(divNIS);
 var btnColetar1 = document.createElement('input');
 btnColetar1.setAttribute('type','button');
 btnColetar1.setAttribute('name','btnColetar1');
-btnColetar1.setAttribute('value','Extrair dados \"Pessoais\"');
+btnColetar1.setAttribute('value','Extrair de aba \"Pessoais\"');
 btnColetar1.setAttribute('class','botaoSCT');
 divCredit.appendChild(btnColetar1);
 btnColetar1.onclick = function(){coletar(1)};
@@ -278,7 +278,7 @@ btnColetar1.onclick = function(){coletar(1)};
 var btnColetar2 = document.createElement('input');
 btnColetar2.setAttribute('type','button');
 btnColetar2.setAttribute('name','btnColetar2');
-btnColetar2.setAttribute('value','Extrair dados \"Sociais\"');
+btnColetar2.setAttribute('value','Extrair de aba \"Sociais\"');
 btnColetar2.setAttribute('class','botaoSCT');
 divCredit.appendChild(btnColetar2);
 btnColetar2.onclick = function(){coletar(2)};
