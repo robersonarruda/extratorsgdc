@@ -67,7 +67,7 @@ var a = "";
 var k = 0;
 var cabecalho;
 
-//FUNÇÃO SALVAR CONTEÚDO EM TEXTO
+//FUNÇÃO SALVAR CONTEÚDO EM CSV
 function saveTextAsFile() {
     var conteudo = document.getElementById("txtDados").value; //Retira acentos =>> .normalize('NFD').replace(/[\u0300-\u036f]/g, "");
     var a = document.createElement('a');
@@ -79,11 +79,6 @@ function saveTextAsFile() {
     a.click();
     document.body.removeChild(a);
 }
-
-function destroyClickedElement(event) {
-  document.body.removeChild(event.target);
-}
-
 
 function coletar(opcao)
 {
