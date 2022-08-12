@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
 // @fullname      Extrator Contatos Sigeduca
-// @version       2.1.3
+// @version       2.1.5
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -89,6 +89,8 @@ function coletar(opcao)
 {
     n=0;
     vetAluno = [0];
+    ifrIframe1.removeEventListener("load", coletaDados1);
+    ifrIframe1.removeEventListener("load", coletaDados2);
     vetAluno = txtareaAluno.value;
     vetAluno = vetAluno.replace(/\n/g, ",");
     vetAluno = vetAluno.replace(/\t/g, ",");
@@ -211,7 +213,7 @@ function coletaDados2() {
         }
     }
     if(n >= vetAluno.length){
-        navigator.clipboard.writeText(txtareaDados.value);
+        //navigator.clipboard.writeText(txtareaDados.value); ERRO
         txtareaDados.select();
         alert('finalizado');
     }
@@ -257,6 +259,7 @@ txtareaAluno.setAttribute('name','txtAluno');
 txtareaAluno.setAttribute('id','txtAluno');
 txtareaAluno.setAttribute('value','');
 txtareaAluno.setAttribute('style','border:1px solid #000000;width: 355px;height: 82px; resize: none');
+txtareaAluno.setAttribute('onclick','this.select()');
 divCredit.appendChild(txtareaAluno);
 
 //DIV NIS1
@@ -299,6 +302,7 @@ txtareaDados.setAttribute('name','txtDados');
 txtareaDados.setAttribute('id','txtDados');
 txtareaDados.setAttribute('value','');
 txtareaDados.setAttribute('style','border:1px solid #000000;width: 355px;height: 150px; resize: none');
+txtareaDados.setAttribute('onclick','this.select()');
 txtareaDados.readOnly = true;
 divCredit.appendChild(txtareaDados);
 
