@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
 // @fullname      Extrator Contatos Sigeduca
-// @version       2.1.6
+// @version       2.1.7
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -64,7 +64,6 @@ document.getElementsByTagName('head')[0].appendChild(styleSCT);
 var vetAluno = [0];
 var n = 0;
 var a = "";
-var k = 0;
 var cabecalho;
 
 //FUNÇÃO SALVAR CONTEÚDO EM CSV
@@ -80,38 +79,23 @@ function saveTextAsFile() {
     document.body.removeChild(a);
 }
 
+//INICIAR
 function coletar(opcao)
 {
     n=0;
     vetAluno = [0];
     ifrIframe1.removeEventListener("load", coletaDados1);
     ifrIframe1.removeEventListener("load", coletaDados2);
-    vetAluno = txtareaAluno.value;
-    vetAluno = vetAluno.replace(/\n/g, ",");
-    vetAluno = vetAluno.replace(/\t/g, ",");
-    vetAluno = vetAluno.replace(/ /g,",");
-    vetAluno = vetAluno.replace(/;/g, ",");
-    vetAluno = vetAluno.replace(/\./g, ",");
-    vetAluno = vetAluno.replace(/,,/g, ",");
-    vetAluno = vetAluno.replace(/,,/g, ",");
-    vetAluno = vetAluno.replace(/,,/g, ",");
-    vetAluno = vetAluno.split(",");
-    k=vetAluno.length;
-    while(k >= 0){
-        if(vetAluno[k]==""){vetAluno.splice(k, 1)}
-            k--;
-        if(k < 0){
-            a = "";
-            txtareaDados.value ="";
-            if(opcao==1){
-                ifrIframe1.src= "http://sigeduca.seduc.mt.gov.br/ged/hwtmgedaluno.aspx?"+vetAluno[n]+",,HWMConAluno,DSP,1,0";
-                ifrIframe1.addEventListener("load", coletaDados1);
-            }
-            if(opcao==2){
-                ifrIframe1.src= "http://sigeduca.seduc.mt.gov.br/ged/hwtmgedaluno1.aspx?"+vetAluno[n]+",,HWMConAluno,DSP,0,1,0,1";
-                ifrIframe1.addEventListener("load", coletaDados2);
-            }
-        }
+    vetAluno = txtareaAluno.value.match(/[0-9]+/g).filter(Boolean);
+    a = "";
+    txtareaDados.value ="";
+    if(opcao==1){
+        ifrIframe1.src= "http://sigeduca.seduc.mt.gov.br/ged/hwtmgedaluno.aspx?"+vetAluno[n]+",,HWMConAluno,DSP,1,0";
+        ifrIframe1.addEventListener("load", coletaDados1);
+    }
+    if(opcao==2){
+        ifrIframe1.src= "http://sigeduca.seduc.mt.gov.br/ged/hwtmgedaluno1.aspx?"+vetAluno[n]+",,HWMConAluno,DSP,0,1,0,1";
+        ifrIframe1.addEventListener("load", coletaDados2);
     }
 }
 
@@ -176,6 +160,8 @@ function coletaDados1() {
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESENDCIDDSC').innerHTML+";"; cabecalho = cabecalho+"Cidade;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESENDUF').innerHTML+";"; cabecalho = cabecalho+"UF;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESCEP').innerHTML+";"; cabecalho = cabecalho+"CEP;";
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESDISTCOD').innerHTML+";"; cabecalho = cabecalho+"UC (Distribuidora);";
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESUC').innerHTML+";"; cabecalho = cabecalho+"Nº UC;";
         a = a + "\n";
 
         txtareaDados.value = cabecalho+"\n"+a;
@@ -185,8 +171,8 @@ function coletaDados1() {
         }
     }
     if(n >= vetAluno.length){
-        //navigator.clipboard.writeText(txtareaDados.value); ERRO
         txtareaDados.select();
+        document.execCommand("copy");
         alert('finalizado');
     }
 }
@@ -208,8 +194,8 @@ function coletaDados2() {
         }
     }
     if(n >= vetAluno.length){
-        //navigator.clipboard.writeText(txtareaDados.value); ERRO
         txtareaDados.select();
+        document.execCommand("copy");
         alert('finalizado');
     }
 }
