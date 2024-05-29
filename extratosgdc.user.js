@@ -1,13 +1,12 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @fullname      Extrator Contatos Sigeduca
-// @version       2.1.7
+// @version       2.1.8
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
 // @downloadURL   https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
 // @updateURL     https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
-// @include	      *sigeduca.seduc.mt.gov.br/ged/hwmconaluno.aspx*
+// @match	      *sigeduca.seduc.mt.gov.br/ged/hwmconaluno.aspx*
 // @copyright     2019, Roberson Arruda (robersonarruda@outlook.com)
 // @grant         none
 // ==/UserScript==
@@ -64,16 +63,15 @@ document.getElementsByTagName('head')[0].appendChild(styleSCT);
 var vetAluno = [0];
 var n = 0;
 var a = "";
-var cabecalho;
+var cabecalho="";
+var nomealuno="";
 
 //FUNÇÃO SALVAR CONTEÚDO EM CSV
 function saveTextAsFile() {
-    var conteudo = document.getElementById("txtDados").value; //Retira acentos =>> .normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    var conteudo = document.getElementById("txtDados").value; //P Retirar acentos utilize =>> .normalize('NFD').replace(/[\u0300-\u036f]/g, "");
     var a = document.createElement('a');
-    with (a) {
-        var href='data:text/csv;base64,' + btoa(conteudo);
-        var download= 'dadosGED.csv';
-    }
+    a.href = 'data:text/csv;base64,' + btoa(conteudo);
+    a.download = 'dadosGED.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -180,11 +178,20 @@ function coletaDados1() {
 //Extrai dados da ABA "SOCIAL"
 function coletaDados2() {
     if(n < vetAluno.length){
-        a = a + vetAluno[n] +";"; cabecalho = "Cod Aluno;" //Cod Aluno
+        //Localiza o nome do aluno numa cadeia de caracteres
+        let str = parent.frames[0].document.getElementsByName('GXState')[0].value;
+        let regex = /"GedAluNom":"([^"]+)"/;
+        let match = str.match(regex);
+        nomealuno = match[1];
+
+        a = a + vetAluno[n] +";"; cabecalho = "Cod Aluno;"; //Cod Aluno
+        a = a + nomealuno +";"; cabecalho = cabecalho+"Nome do Aluno;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESNUMCARTAOSUS').innerHTML +";"; cabecalho = cabecalho+"Nro SUS;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESNIS').innerHTML +";"; cabecalho = cabecalho+"Nro NIS;";
         a = a + parent.frames[0].document.getElementById('span_CTLGEDALUTIPOSANGUINEO').innerHTML.replace('SELECIONE', 'não consta')+";"; cabecalho = cabecalho+"Tipo sanguíneo;";
         a = a + parent.frames[0].document.getElementById('span_CTLGEDALURECATEEDUESP').innerHTML +";"; cabecalho = cabecalho+"Recebe Atendimento Especializado;";
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESBENPCAS').innerHTML +";"; cabecalho = cabecalho+"Recebe BPC;";
+        a = a + parent.frames[0].document.getElementById('span_CTLGEDALUPASSELIVRE').innerHTML +";"; cabecalho = cabecalho+"Utiliza Passe Livre;";
         a = a + "\n";
 
         txtareaDados.value = cabecalho+"\n"+a;
