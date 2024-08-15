@@ -7,6 +7,7 @@
 // @downloadURL   https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
 // @updateURL     https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
 // @match	      https://*.seduc.mt.gov.br/ged/hwmconaluno.aspx*
+// @match	      http://*.seduc.mt.gov.br/ged/hwmconaluno.aspx*
 // @copyright     2019, Roberson Arruda (robersonarruda@outlook.com)
 // @grant         none
 // ==/UserScript==
