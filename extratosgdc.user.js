@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.1.9
+// @version       2.2.0
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -60,12 +60,18 @@ styleSCT.innerHTML =
 '	border:1px solid #102b4d;}'
 document.getElementsByTagName('head')[0].appendChild(styleSCT);
 
+
+//Dados de metadados do script
+const scriptName = GM_info.script.name; // Obtém o valor de @name
+const scriptVersion = GM_info.script.version; // Obtém o valor de @version
+
 //Variáveis
 var vetAluno = [0];
 var n = 0;
 var a = "";
 var cabecalho="";
 var nomealuno="";
+var grupoSocial = "";
 
 //FUNÇÃO SALVAR CONTEÚDO EM CSV
 function saveTextAsFile() {
@@ -101,11 +107,50 @@ function coletar(opcao)
 //Extrai dados da ABA "PESSOAL"
 function coletaDados1() {
     if(n < vetAluno.length){
+
+        //VERIFICAR GRUPO SOCIAL ASSINALADO E GUARDAR NA VARIÁVEL grupoSocial
+        // Percorre todos os elementos de input com o name="CTLGERPESGRPSOC" (Grupo Social)
+        let radios = parent.frames[0].document.querySelectorAll('input[name="CTLGERPESGRPSOC"]');
+        // Para cada input radio
+        radios.forEach(function(radio) {
+            // Verifica se o radio está selecionado (checked)
+            if (radio.checked) {
+                // Verifica o value e atribui o valor adequado à variável grupoSocial
+                switch (radio.value) {
+                    case "N":
+                        grupoSocial = "Não declarado";
+                        break;
+                    case "I":
+                        grupoSocial = "Circense";
+                        break;
+                    case "T":
+                        grupoSocial = "Trabalhador Itinerante";
+                        break;
+                    case "C":
+                        grupoSocial = "Acampados";
+                        break;
+                    case "A":
+                        grupoSocial = "Artista";
+                        break;
+                    case "P":
+                        grupoSocial = "Povos Indígenas";
+                        break;
+                    case "Q":
+                        grupoSocial = "Povos Quilombolas";
+                        break;
+                    default:
+                        grupoSocial = ""; // Caso o value não seja nenhum dos listados
+                }
+            }
+        });
+
         //Dados gerais do Aluno
         a = a + vetAluno[n] +";"; cabecalho = "Cod Aluno;"; //Cod Aluno
         a = a + parent.frames[0].document.getElementById('span_CTLGEDALUIDINEP').innerHTML +";"; cabecalho = cabecalho+"Nº INEP;"; //Matrícula INEP
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESNOM').innerHTML +";"; cabecalho = cabecalho+"Aluno;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESCPF').innerHTML.replace(/^([\d]{3})([\d]{3})([\d]{3})([\d]{2})$/, "$1.$2.$3-$4") +";"; cabecalho = cabecalho+"CPF do Aluno;";
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESRACA').innerHTML +";"; cabecalho = cabecalho+"Cor ou Raça;";
+        a = a + grupoSocial+";"; cabecalho = cabecalho+"Grupo Social;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESRG').innerHTML +";"; cabecalho = cabecalho+"RG do aluno;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERORGEMICOD').innerHTML +";"; cabecalho = cabecalho+"Órgão Expedidor;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESSEXO').innerHTML +";"; cabecalho = cabecalho+"Sexo do Aluno;";
@@ -326,7 +371,5 @@ br1 = document.createElement('br');
 span1.appendChild(br1);
 
 span1 = document.createElement('span');
-span1.innerHTML = 'Extrator de Contatos';
+span1.textContent = `${scriptName} v${scriptVersion}`
 divCredito.appendChild(span1);
-
-window.scrollTo(0, document.body.scrollHeight);
