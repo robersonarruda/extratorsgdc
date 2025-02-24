@@ -291,7 +291,7 @@ async function coletaDados3(vetAluno) {
         "Observação"
     ].join("; ") + "\n";
 
-    function esperarCarregarElemento(idElemento, valorAntigo, tentativas = 80, intervalo = 25) {
+    function esperarCarregarElemento(idElemento, valorAntigo, tentativas = 80, intervalo = 50) {
         return new Promise((resolve, reject) => {
             let contador = 0;
             let verificar = setInterval(() => {
@@ -367,7 +367,7 @@ async function coletaDados3(vetAluno) {
             if (error === "Processo abortado") return; // Se abortado, sai da função
 
             let nomeAluno = parent.frames[0].document.getElementById("span_vGEDALUNOM")?.innerText || "N/A";
-            txtareaDados.value += `${codigo.trim()}; ${nomeAluno.trim()}; N/A; N/A; N/A; Aluno não matriculado ou código inexistente, verifique\n`;
+            txtareaDados.value += `${codigo.trim()}; ${nomeAluno.trim()}; Aluno não matriculado ou código inexistente ou tempo de espera pelo retorno da consulta esgotado. Verifique!\n`;
 
         }
     }
