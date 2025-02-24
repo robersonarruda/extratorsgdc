@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.5.0
+// @version       2.5.1
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -367,8 +367,11 @@ async function coletaDados3(vetAluno) {
             if (error === "Processo abortado") return; // Se abortado, sai da função
 
             let nomeAluno = parent.frames[0].document.getElementById("span_vGEDALUNOM")?.innerText || "N/A";
-            txtareaDados.value += `${codigo.trim()}; ${nomeAluno.trim()}; Aluno não matriculado ou código inexistente ou tempo de espera pelo retorno da consulta esgotado. Verifique!\n`;
 
+            let erroElemento = document.querySelector("#gxErrorViewer .erro");
+            let erroAlunoNaoMatriculado = erroElemento ? erroElemento.textContent.trim() : "";
+
+            txtareaDados.value += `${codigo.trim()}; ${nomeAluno.trim()}; ${erroAlunoNaoMatriculado ? erroAlunoNaoMatriculado : "O extrator não teve retorno da consulta. Verifique o código deste aluno."}\n`;
         }
     }
 
