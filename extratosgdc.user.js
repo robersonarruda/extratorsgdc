@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.2.0
+// @version       2.5.0
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -91,6 +91,7 @@ function coletar(opcao)
     vetAluno = [0];
     ifrIframe1.removeEventListener("load", coletaDados1);
     ifrIframe1.removeEventListener("load", coletaDados2);
+    ifrIframe1.removeEventListener("load", coletaDados3(vetAluno));
     vetAluno = txtareaAluno.value.match(/[0-9]+/g).filter(Boolean);
     a = "";
     txtareaDados.value ="";
@@ -101,6 +102,14 @@ function coletar(opcao)
     if(opcao==2){
         ifrIframe1.src= "http://sigeduca.seduc.mt.gov.br/ged/hwtmgedaluno1.aspx?"+vetAluno[n]+",,HWMConAluno,DSP,0,1,0,1";
         ifrIframe1.addEventListener("load", coletaDados2);
+    }
+    if(opcao==3){
+        ifrIframe1.src= "http://sigeduca.seduc.mt.gov.br/ged/hwmgedmanutencaomatricula.aspx";
+        ifrIframe1.addEventListener("load", function() {
+            setTimeout(function() {
+                coletaDados3(vetAluno);
+            }, 500); // 500ms de atraso
+        });
     }
 }
 
@@ -253,6 +262,132 @@ function coletaDados2() {
     }
 }
 
+//Extrair dados da Matrícula
+let abortController = null; // Controlador para cancelar execução anterior
+async function coletaDados3(vetAluno) {
+    // Se já houver uma execução em andamento, cancelá-la
+    if (abortController) {
+        abortController.abort();
+    }
+
+    // Criar um novo controlador de abortamento
+    abortController = new AbortController();
+    let abortSignal = abortController.signal;
+
+    let matCodAntigo = "0"; // Inicializa com "0"
+    let nomeAntigo = "0";
+    txtareaDados.value = [
+        "Código",
+        "Nome do Aluno",
+        "Matriz",
+        "Turma",
+        "Rede de Origem",
+        "Utiliza Transporte",
+        "Matrícula Mescla",
+        "Matrícula Extraordinária",
+        "Matrícula de Progressão Parcial",
+        "Data da Matrícula",
+        "Nº da Matrícula",
+        "Observação"
+    ].join("; ") + "\n";
+
+    function esperarCarregarElemento(idElemento, valorAntigo, tentativas = 80, intervalo = 25) {
+        return new Promise((resolve, reject) => {
+            let contador = 0;
+            let verificar = setInterval(() => {
+                if (abortSignal.aborted) { // Verifica se a função foi abortada
+                    clearInterval(verificar);
+                    reject("Processo abortado");
+                    return;
+                }
+
+                let elemento = parent.frames[0].document.getElementById(idElemento);
+                if (elemento && elemento.innerText.trim() !== "" && elemento.innerText.trim() !== valorAntigo) {
+                    clearInterval(verificar);
+                    resolve(elemento.innerText.trim());
+                    return;
+                }
+                contador++;
+                if (contador >= tentativas) {
+                    clearInterval(verificar);
+                    reject("Erro ao consultar aluno");
+                }
+            }, intervalo);
+        });
+    }
+
+    for (let i = 0; i < vetAluno.length; i++) {
+        if (abortSignal.aborted) return; // Se foi abortado, interrompe o loop
+
+        let codigo = vetAluno[i];
+        parent.frames[0].document.getElementById('vGEDALUCOD').value = codigo;
+        parent.frames[0].document.getElementById('vGEDALUCOD').onblur();
+        // Adiciona um tempo de 10ms antes de executar o clique
+        setTimeout(function() {
+            parent.frames[0].document.getElementsByName('BCONSULTAR')[0].click();
+        }, 50);
+
+        try {
+            let matCodAtual = await esperarCarregarElemento("span_vGEDMATCOD_0001", matCodAntigo);
+            let nomeAtual = await esperarCarregarElemento("span_vGEDALUNOM", nomeAntigo);
+            let nomeAluno = parent.frames[0].document.getElementById("span_vGEDALUNOM")?.innerText || "N/A";
+            let matrizTurma = parent.frames[0].document.getElementById("span_vGRIDGEDMATDISCGERMATMSC_0001")?.innerText || "N/A";
+            let turmaAluno = parent.frames[0].document.getElementById("span_vGERTURSAL_0001")?.innerText || "N/A";
+
+            let selectElem = parent.frames[0].document.getElementById("vGEDMATTIPOORIGEMMAT_0001");
+            let redeOrigemMat = selectElem ? selectElem.options[selectElem.selectedIndex]?.text || "N/A" : "N/A";
+
+            let selectElemTransporte = parent.frames[0].document.getElementById("vMATTRANSPESCOLAR_0001");
+            let utilizaTransporte = selectElemTransporte.options[selectElemTransporte.selectedIndex]?.text;
+
+            let matriculaMescla = verCheckbox("vMATMESCLA_0001");
+            let matriculaExtraord = verCheckbox("vMATEXTRAORDINARIA_0001");
+            let matriculaProgressao = verCheckbox("vMATPROGRESSAOPARCIAL_0001");
+            let dataMatricula = parent.frames[0].document.getElementById('span_vGEDMATDTA_0001')?.innerText || "N/A";
+            let numMatricula = parent.frames[0].document.getElementById('span_vGEDMATCOD_0001')?.innerText || "N/A";
+
+            txtareaDados.value += [
+                codigo.trim(),
+                nomeAluno.trim(),
+                matrizTurma.trim(),
+                turmaAluno.trim(),
+                redeOrigemMat.trim(),
+                utilizaTransporte.trim(),
+                matriculaMescla.trim(),
+                matriculaExtraord.trim(),
+                matriculaProgressao.trim(),
+                dataMatricula.trim(),
+                numMatricula.trim()
+            ].join("; ") + "\n";
+
+
+            matCodAntigo = matCodAtual; // Atualiza o código para próxima verificação
+        } catch (error) {
+            console.error(error);
+            if (error === "Processo abortado") return; // Se abortado, sai da função
+
+            let nomeAluno = parent.frames[0].document.getElementById("span_vGEDALUNOM")?.innerText || "N/A";
+            txtareaDados.value += `${codigo.trim()}; ${nomeAluno.trim()}; N/A; N/A; N/A; Aluno não matriculado ou código inexistente, verifique\n`;
+
+        }
+    }
+
+    if (!abortSignal.aborted) {
+        alert("Consulta finalizada!"); // Exibe alerta ao concluir, se não tiver sido abortado
+    }
+}
+//Função verificarCheckbox
+function verCheckbox(id) {
+    let checkbox = parent.frames[0].document.getElementsByName(id)[0];
+    if (checkbox) {
+        return checkbox.value === "1" ? "Sim" : "Não";
+    } else {
+        console.error("Elemento não encontrado.");
+        return null;
+    }
+}
+
+
 //BOTÃO EXIBIR ou MINIMIZAR
 var exibir = '$("#credito1").slideToggle();if(this.value=="MINIMIZAR"){this.value="ABRIR"}else{this.value="MINIMIZAR"}';
 var btnExibir = document.createElement('input');
@@ -319,6 +454,15 @@ btnColetar2.setAttribute('value','Extrair de aba \"Social\"');
 btnColetar2.setAttribute('class','botaoSCT');
 divCredit.appendChild(btnColetar2);
 btnColetar2.onclick = function(){coletar(2)};
+
+//BOTÃO COLETAR DADOS MATRICULAS
+var btnColetar3 = document.createElement('input');
+btnColetar3.setAttribute('type','button');
+btnColetar3.setAttribute('name','btnColetar3');
+btnColetar3.setAttribute('value','Extrair Dados da Matrícula');
+btnColetar3.setAttribute('class','botaoSCT');
+divCredit.appendChild(btnColetar3);
+btnColetar3.onclick = function(){coletar(3)};
 
 //QUEBRA LINHA
 var quebraLinha1 = document.createElement("br");
