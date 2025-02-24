@@ -368,7 +368,7 @@ async function coletaDados3(vetAluno) {
 
             let nomeAluno = parent.frames[0].document.getElementById("span_vGEDALUNOM")?.innerText || "N/A";
 
-            let erroElemento = document.querySelector("#gxErrorViewer .erro");
+            let erroElemento = parent.frames[0].document.querySelector("#gxErrorViewer .erro");
             let erroAlunoNaoMatriculado = erroElemento ? erroElemento.textContent.trim() : "";
 
             txtareaDados.value += `${codigo.trim()}; ${nomeAluno.trim()}; ${erroAlunoNaoMatriculado ? erroAlunoNaoMatriculado : "O extrator não teve retorno da consulta. Verifique o código deste aluno."}\n`;
