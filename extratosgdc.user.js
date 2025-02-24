@@ -409,7 +409,7 @@ var divCredit = document.createElement('div');
     divCredit.setAttribute('name','credito2');
     divCredit.setAttribute('class','menuSCT');
     divCredit.setAttribute('style','background: #DBDBDB; color: #000; width: 380px; text-align: center;font-weight: bold;position: fixed;z-index: 2002;padding: 5px 0px 0px 5px;bottom: 24px;right: 30px;height: 400px;');
-document.getElementsByTagName('body')[0].appendChild(divCredit);
+document.getElementsByTagName('body')[0].appendChild(divCredit);    
 
 //Iframe
 var ifrIframe1 = document.createElement("iframe");
