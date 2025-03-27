@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.5.1
+// @version       2.5.3
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -12,52 +12,95 @@
 // @grant         none
 // ==/UserScript==
 
+/*
+...Não existe só um caminho. Dê a volta e encontre outro!
+*/
 
-//CARREGA libJquery
-var libJquery = document.createElement('script');
-libJquery.src = 'https://code.jquery.com/jquery-3.4.0.min.js';
-libJquery.language='javascript';
-libJquery.type = 'text/javascript';
-document.getElementsByTagName('head')[0].appendChild(libJquery);
 
-//CSS DOS BOTÕES
+// Função para simular o Slide do Jquery, dispensando uso dessa biblioteca
+const alturasOriginais = {}; // Armazena as alturas atribuídas diretamente
+function slideToggle(elementId, duracao = 300) {
+    let element = document.getElementById(elementId);
+    if (!element) return; // Se o elemento não existir, sai da função.
+
+    // Verifica se a altura já foi armazenada. Se não, armazena a altura atribuída diretamente.
+    if (!alturasOriginais[elementId]) {
+        // Se a altura não estiver definida diretamente no estilo, vamos calcular
+        if (element.style.height === "") {
+            // Caso não tenha altura definida, usamos o scrollHeight como fallback
+            alturasOriginais[elementId] = element.scrollHeight;
+        } else {
+            // Caso tenha uma altura definida, usamos essa altura
+            alturasOriginais[elementId] = parseInt(element.style.height, 10);
+        }
+    }
+
+    if (window.getComputedStyle(element).display === "none") {
+        // Exibir com efeito de slide
+        element.style.display = "block";
+        element.style.overflow = "hidden"; // Evita transbordamento
+        element.style.height = "0px"; // Inicia com altura 0px
+
+        setTimeout(() => {
+            element.style.transition = `height ${duracao/1000}s ease-out`;
+            element.style.height = alturasOriginais[elementId] + "px"; // Usa a altura armazenada
+        }, 10);
+    } else {
+        // Ocultar com efeito de slide
+        element.style.height = "0px";
+        element.style.transition = `height ${duracao/1000}s ease-in`;
+        element.style.overflow = "hidden";
+
+        setTimeout(() => {
+            element.style.display = "none";
+            element.style.height = ""; // Reseta altura para evitar bugs
+        }, duracao);
+    }
+}
+
+
+
 var styleSCT = document.createElement('style');
 styleSCT.type = 'text/css';
-styleSCT.innerHTML =
-'.botaoSCT {'+
-'	-moz-box-shadow:inset 1px 1px 0px 0px #b2ced4;'+
-'	-webkit-box-shadow:inset 1px 1px 0px 0px #b2ced4;'+
-'	box-shadow:inset 1px 1px 0px 0px #b2ced4;'+
-'	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #4e88ed), color-stop(1, #3255c7) );'+
-'	background:-moz-linear-gradient( center top, #4e88ed 5%, #3255c7 100% );'+
-'	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#4e88ed", endColorstr="#3255c7");'+
-'	background-color:#4e88ed;'+
-'	-moz-border-radius:4px;'+
-'	-webkit-border-radius:4px;'+
-'	border-radius:4px;'+
-'	border:1px solid #102b4d;'+
-'	display:inline-block;'+
-'	color:#ffffff;'+
-'	font-family:Trebuchet MS;'+
-'	font-size:11px;'+
-'	font-weight:bold;'+
-'	padding:2px 0px;'+
-'	width:152px;'+
-'	text-decoration:none;'+
-'	text-shadow:1px 1px 0px #100d29;'+
-'}.botaoSCT:hover {'+
-'	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #3255c7), color-stop(1, #4e88ed) );'+
-'	background:-moz-linear-gradient( center top, #3255c7 5%, #4e88ed 100% );'+
-'	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#3255c7", endColorstr="#4e88ed");'+
-'	background-color:#3255c7;'+
-'}.botaoSCT:active {'+
-'	position:relative;'+
-'	top:1px;}'+
-'.menuSCT{'+
-'	-moz-border-radius:4px;'+
-'	-webkit-border-radius:4px;'+
-'	border-radius:4px;'+
-'	border:1px solid #102b4d;}'
+styleSCT.innerHTML = `
+.botaoSCT {
+  -moz-box-shadow: inset 1px 1px 0px 0px #b2ced4;
+  -webkit-box-shadow: inset 1px 1px 0px 0px #b2ced4;
+  box-shadow: inset 1px 1px 0px 0px #b2ced4;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #4e88ed), color-stop(1, #3255c7));
+  background: -moz-linear-gradient(center top, #4e88ed 5%, #3255c7 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#4e88ed", endColorstr="#3255c7");
+  background-color: #4e88ed;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  border: 1px solid #102b4d;
+  display: inline-block;
+  color: #ffffff;
+  font-family: Trebuchet MS;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 0px;
+  width: 152px;
+  text-decoration: none;
+  text-shadow: 1px 1px 0px #100d29;
+}
+.botaoSCT:hover {
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #3255c7), color-stop(1, #4e88ed));
+  background: -moz-linear-gradient(center top, #3255c7 5%, #4e88ed 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#3255c7", endColorstr="#4e88ed");
+  background-color: #3255c7;
+}
+.botaoSCT:active {
+  position: relative;
+  top: 1px;
+}
+.menuSCT {
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  border: 1px solid #102b4d;
+}`;
 document.getElementsByTagName('head')[0].appendChild(styleSCT);
 
 
@@ -87,14 +130,15 @@ function saveTextAsFile() {
 //INICIAR
 function coletar(opcao)
 {
-    n=0;
-    vetAluno = [0];
     ifrIframe1.removeEventListener("load", coletaDados1);
     ifrIframe1.removeEventListener("load", coletaDados2);
-    ifrIframe1.removeEventListener("load", coletaDados3(vetAluno));
+    ifrIframe1.removeEventListener("load", coletaDados3);
+    n=0;
+    vetAluno = [0];
     vetAluno = txtareaAluno.value.match(/[0-9]+/g).filter(Boolean);
     a = "";
     txtareaDados.value ="";
+
     if(opcao==1){
         ifrIframe1.src= "http://sigeduca.seduc.mt.gov.br/ged/hwtmgedaluno.aspx?"+vetAluno[n]+",,HWMConAluno,DSP,1,0";
         ifrIframe1.addEventListener("load", coletaDados1);
@@ -105,11 +149,7 @@ function coletar(opcao)
     }
     if(opcao==3){
         ifrIframe1.src= "http://sigeduca.seduc.mt.gov.br/ged/hwmgedmanutencaomatricula.aspx";
-        ifrIframe1.addEventListener("load", function() {
-            setTimeout(function() {
-                coletaDados3(vetAluno);
-            }, 500); // 500ms de atraso
-        });
+        ifrIframe1.addEventListener("load", coletaDados3);
     }
 }
 
@@ -263,8 +303,13 @@ function coletaDados2() {
 }
 
 //Extrair dados da Matrícula
+const coletaDados3 = function() {
+    setTimeout(function() {
+        iniColetaDados3(vetAluno);
+    }, 500); // 500ms de atraso
+}
 let abortController = null; // Controlador para cancelar execução anterior
-async function coletaDados3(vetAluno) {
+async function iniColetaDados3(vetAluno) {
     // Se já houver uma execução em andamento, cancelá-la
     if (abortController) {
         abortController.abort();
@@ -392,7 +437,15 @@ function verCheckbox(id) {
 
 
 //BOTÃO EXIBIR ou MINIMIZAR
-var exibir = '$("#credito1").slideToggle();if(this.value=="MINIMIZAR"){this.value="ABRIR"}else{this.value="MINIMIZAR"}';
+function exibir(){
+    slideToggle('credito1');
+    if(this.value=="MINIMIZAR"){
+        this.value="ABRIR"
+    }
+    else{
+        this.value="MINIMIZAR"
+    };
+};
 var btnExibir = document.createElement('input');
     btnExibir.setAttribute('type','button');
     btnExibir.setAttribute('id','exibir1');
@@ -403,7 +456,7 @@ var btnExibir = document.createElement('input');
     btnExibir.setAttribute('onmouseout', 'this.style.backgroundColor = "#FF3300"');
     btnExibir.setAttribute('onmousedown', 'this.style.backgroundColor = "#EB8038"');
     btnExibir.setAttribute('onmouseup', 'this.style.backgroundColor = "#FF7A00"');
-    btnExibir.setAttribute('onclick', exibir);
+    btnExibir.onclick = exibir;
 document.getElementsByTagName('body')[0].appendChild(btnExibir);
 
 //DIV principal (corpo)
@@ -412,7 +465,7 @@ var divCredit = document.createElement('div');
     divCredit.setAttribute('name','credito2');
     divCredit.setAttribute('class','menuSCT');
     divCredit.setAttribute('style','background: #DBDBDB; color: #000; width: 380px; text-align: center;font-weight: bold;position: fixed;z-index: 2002;padding: 5px 0px 0px 5px;bottom: 24px;right: 30px;height: 400px;');
-document.getElementsByTagName('body')[0].appendChild(divCredit);    
+document.getElementsByTagName('body')[0].appendChild(divCredit);
 
 //Iframe
 var ifrIframe1 = document.createElement("iframe");
