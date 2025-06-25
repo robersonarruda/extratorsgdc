@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.5.3
+// @version       2.5.4
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -11,10 +11,6 @@
 // @copyright     2019, Roberson Arruda (robersonarruda@outlook.com)
 // @grant         none
 // ==/UserScript==
-
-/*
-...Não existe só um caminho. Dê a volta e encontre outro!
-*/
 
 
 // Função para simular o Slide do Jquery, dispensando uso dessa biblioteca
@@ -60,47 +56,40 @@ function slideToggle(elementId, duracao = 300) {
 
 
 
+//CSS DOS BOTÕES
 var styleSCT = document.createElement('style');
 styleSCT.type = 'text/css';
-styleSCT.innerHTML = `
-.botaoSCT {
-  -moz-box-shadow: inset 1px 1px 0px 0px #b2ced4;
-  -webkit-box-shadow: inset 1px 1px 0px 0px #b2ced4;
-  box-shadow: inset 1px 1px 0px 0px #b2ced4;
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #4e88ed), color-stop(1, #3255c7));
-  background: -moz-linear-gradient(center top, #4e88ed 5%, #3255c7 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#4e88ed", endColorstr="#3255c7");
-  background-color: #4e88ed;
-  -moz-border-radius: 4px;
-  -webkit-border-radius: 4px;
-  border-radius: 4px;
-  border: 1px solid #102b4d;
-  display: inline-block;
-  color: #ffffff;
-  font-family: Trebuchet MS;
-  font-size: 11px;
-  font-weight: bold;
-  padding: 2px 0px;
-  width: 152px;
-  text-decoration: none;
-  text-shadow: 1px 1px 0px #100d29;
-}
-.botaoSCT:hover {
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #3255c7), color-stop(1, #4e88ed));
-  background: -moz-linear-gradient(center top, #3255c7 5%, #4e88ed 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#3255c7", endColorstr="#4e88ed");
-  background-color: #3255c7;
-}
-.botaoSCT:active {
-  position: relative;
-  top: 1px;
-}
-.menuSCT {
-  -moz-border-radius: 4px;
-  -webkit-border-radius: 4px;
-  border-radius: 4px;
-  border: 1px solid #102b4d;
-}`;
+styleSCT.innerHTML =
+`.botaoSCT {
+	-moz-box-shadow:inset 1px 1px 0px 0px #b2ced4;
+	-webkit-box-shadow:inset 1px 1px 0px 0px #b2ced4;
+	box-shadow:inset 1px 1px 0px 0px #b2ced4;
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#4e88ed", endColorstr="#3255c7");
+	background-color:#4e88ed;
+	border:1px solid #102b4d;
+	display:inline-block;
+	color:#ffffff;
+	font-family:Trebuchet MS;
+	font-size:11px;
+	font-weight:bold;
+	padding:2px 0px;
+	width:152px;
+	text-decoration:none;
+	text-shadow:1px 1px 0px #100d29;
+}.botaoSCT:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #3255c7), color-stop(1, #4e88ed) );
+	background:-moz-linear-gradient( center top, #3255c7 5%, #4e88ed 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#3255c7", endColorstr="#4e88ed");
+	background-color:#3255c7;
+}.botaoSCT:active {
+	position:relative;
+	top:1px;}
+.menuSCT{
+	-moz-border-radius:4px;
+	-webkit-border-radius:4px;
+	border-radius:4px;
+	border:1px solid #b9b8b9;
+   background:radial-gradient(#c8ced5, #d5d5d533)}`
 document.getElementsByTagName('head')[0].appendChild(styleSCT);
 
 
@@ -115,6 +104,9 @@ var a = "";
 var cabecalho="";
 var nomealuno="";
 var grupoSocial = "";
+
+//constantes
+const quebralinha = document.createElement("br");
 
 //FUNÇÃO SALVAR CONTEÚDO EM CSV
 function saveTextAsFile() {
@@ -225,15 +217,15 @@ function coletaDados1() {
         //Contatos responsável 2
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESNOMRESP2').innerHTML+";"; cabecalho = cabecalho+"Nome do responsável 2;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESRESPCPF2').innerHTML.replace(/^([\d]{3})([\d]{3})([\d]{3})([\d]{2})$/, "$1.$2.$3-$4")+";"; cabecalho = cabecalho+"CPF do responsável 2;";
-        a = a + "("+parent.frames[0].document.getElementById('CTLGERPESTELRESDDDRESP2').innerHTML+")"; //DDD Residencial
-        a = a + parent.frames[0].document.getElementById('CTLGERPESTELRESRESP2').innerHTML+";"; cabecalho = cabecalho+"Tel Res Resp 2;";
-        a = a + "("+parent.frames[0].document.getElementById('CTLGERPESTELCELDDDRESP2').innerHTML+")"; //DDD Celular
-        a = a + parent.frames[0].document.getElementById('CTLGERPESTELCELRESP2').innerHTML+";"; cabecalho = cabecalho+"Tel Celular Resp 2;";
-        a = a + "("+parent.frames[0].document.getElementById('CTLGERPESTELCOMDDDRESP2').innerHTML+")"; //DDD Comercial
-        a = a + parent.frames[0].document.getElementById('CTLGERPESTELCOMRESP2').innerHTML+";"; cabecalho = cabecalho+"Tel Comercial Resp 2;";
-        a = a + "("+parent.frames[0].document.getElementById('CTLGERPESTELCONDDDRESP2').innerHTML+")"; //DDD Contato
-        a = a + parent.frames[0].document.getElementById('CTLGERPESTELCONRESP2').innerHTML+";"; cabecalho = cabecalho+"Tel Contato Resp 2;";
-        a = a + parent.frames[0].document.getElementById('CTLGERPESEMAILRESP2').innerHTML+";"; cabecalho = cabecalho+"E-mail Resp 2;";
+        a = a + "("+parent.frames[0].document.getElementById('span_CTLGERPESTELRESDDDRESP2').innerHTML+")"; //DDD Residencial
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESTELRESRESP2').innerHTML+";"; cabecalho = cabecalho+"Tel Res Resp 2;";
+        a = a + "("+parent.frames[0].document.getElementById('span_CTLGERPESTELCELDDDRESP2').innerHTML+")"; //DDD Celular
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESTELCELRESP2').innerHTML+";"; cabecalho = cabecalho+"Tel Celular Resp 2;";
+        a = a + "("+parent.frames[0].document.getElementById('span_CTLGERPESTELCOMDDDRESP2').innerHTML+")"; //DDD Comercial
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESTELCOMRESP2').innerHTML+";"; cabecalho = cabecalho+"Tel Comercial Resp 2;";
+        a = a + "("+parent.frames[0].document.getElementById('span_CTLGERPESTELCONDDDRESP2').innerHTML+")"; //DDD Contato
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESTELCONRESP2').innerHTML+";"; cabecalho = cabecalho+"Tel Contato Resp 2;";
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESEMAILRESP2').innerHTML+";"; cabecalho = cabecalho+"E-mail Resp 2;";
 
         //Contato da seção final da página (ENDEREÇO)
         a = a + "("+parent.frames[0].document.getElementById('span_CTLGERPESTELRESDDD').innerHTML+")"; //DDD Residencial 2
@@ -464,7 +456,7 @@ var divCredit = document.createElement('div');
     divCredit.setAttribute('id','credito1');
     divCredit.setAttribute('name','credito2');
     divCredit.setAttribute('class','menuSCT');
-    divCredit.setAttribute('style','background: #DBDBDB; color: #000; width: 380px; text-align: center;font-weight: bold;position: fixed;z-index: 2002;padding: 5px 0px 0px 5px;bottom: 24px;right: 30px;height: 400px;');
+    divCredit.setAttribute('style','background: #DBDBDB; color: #000; width: 280px; text-align: center;font-weight: bold;position: fixed;z-index: 2002;padding: 5px 0px 0px 5px;bottom: 24px;right: 30px;height: 400px;');
 document.getElementsByTagName('body')[0].appendChild(divCredit);
 
 //Iframe
@@ -483,7 +475,7 @@ var txtareaAluno = document.createElement('TEXTAREA');
 txtareaAluno.setAttribute('name','txtAluno');
 txtareaAluno.setAttribute('id','txtAluno');
 txtareaAluno.setAttribute('value','');
-txtareaAluno.setAttribute('style','border:1px solid #000000;width: 355px;height: 82px; resize: none');
+txtareaAluno.setAttribute('style','border:1px solid #000000;width: 250px;height: 82px; resize: none');
 txtareaAluno.setAttribute('onclick','this.select()');
 divCredit.appendChild(txtareaAluno);
 
@@ -502,6 +494,8 @@ btnColetar1.setAttribute('class','botaoSCT');
 divCredit.appendChild(btnColetar1);
 btnColetar1.onclick = function(){coletar(1)};
 
+divCredit.appendChild(quebralinha); //quebrar linha
+
 //BOTÃO COLETAR DADOS SOCIAIS
 var btnColetar2 = document.createElement('input');
 btnColetar2.setAttribute('type','button');
@@ -510,6 +504,8 @@ btnColetar2.setAttribute('value','Extrair de aba \"Social\"');
 btnColetar2.setAttribute('class','botaoSCT');
 divCredit.appendChild(btnColetar2);
 btnColetar2.onclick = function(){coletar(2)};
+
+divCredit.appendChild(quebralinha); //quebrar linha
 
 //BOTÃO COLETAR DADOS MATRICULAS
 var btnColetar3 = document.createElement('input');
@@ -535,7 +531,7 @@ var txtareaDados = document.createElement('TEXTAREA');
 txtareaDados.setAttribute('name','txtDados');
 txtareaDados.setAttribute('id','txtDados');
 txtareaDados.setAttribute('value','');
-txtareaDados.setAttribute('style','border:1px solid #000000;width: 355px;height: 150px; resize: none');
+txtareaDados.setAttribute('style','border:1px solid #000000;width: 250px;height: 130px; resize: none');
 txtareaDados.setAttribute('onclick','this.select()');
 txtareaDados.readOnly = true;
 divCredit.appendChild(txtareaDados);
