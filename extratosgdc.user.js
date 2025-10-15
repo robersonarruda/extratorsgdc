@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.5.4
+// @version       2.6.0
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -76,21 +76,55 @@ styleSCT.innerHTML =
 	width:152px;
 	text-decoration:none;
 	text-shadow:1px 1px 0px #100d29;
-}.botaoSCT:hover {
+}
+.botaoSCT:hover {
 	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #3255c7), color-stop(1, #4e88ed) );
 	background:-moz-linear-gradient( center top, #3255c7 5%, #4e88ed 100% );
 	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#3255c7", endColorstr="#4e88ed");
 	background-color:#3255c7;
-}.botaoSCT:active {
+}
+.botaoSCT:active {
 	position:relative;
-	top:1px;}
-.menuSCT{
+	top:1px;
+}
+
+.botaoVerde {
+	-moz-box-shadow:inset 1px 1px 0px 0px #a8d5a0;
+	-webkit-box-shadow:inset 1px 1px 0px 0px #a8d5a0;
+	box-shadow:inset 1px 1px 0px 0px #a8d5a0;
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#49c55c", endColorstr="#2b923f");
+	background-color:#49c55c;
+	border:1px solid #0f4d1f;
+	display:inline-block;
+	color:#ffffff;
+	font-family:Trebuchet MS;
+	font-size:11px;
+	font-weight:bold;
+	padding:2px 0px;
+	width:152px;
+	text-decoration:none;
+	text-shadow:1px 1px 0px #0d1f0d;
+}
+.botaoVerde:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #2b923f), color-stop(1, #49c55c) );
+	background:-moz-linear-gradient( center top, #2b923f 5%, #49c55c 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#2b923f", endColorstr="#49c55c");
+	background-color:#2b923f;
+}
+.botaoVerde:active {
+	position:relative;
+	top:1px;
+}
+
+.menuSCT {
 	-moz-border-radius:4px;
 	-webkit-border-radius:4px;
 	border-radius:4px;
 	border:1px solid #b9b8b9;
-   background:radial-gradient(#c8ced5, #d5d5d533)}`
+	background:radial-gradient(#c8ced5, #d5d5d533);
+}`;
 document.getElementsByTagName('head')[0].appendChild(styleSCT);
+
 
 
 //Dados de metadados do script
@@ -125,9 +159,10 @@ function coletar(opcao)
     ifrIframe1.removeEventListener("load", coletaDados1);
     ifrIframe1.removeEventListener("load", coletaDados2);
     ifrIframe1.removeEventListener("load", coletaDados3);
+    ifrIframe1.removeEventListener("load", coletaDados4);
     n=0;
     vetAluno = [0];
-    vetAluno = txtareaAluno.value.match(/[0-9]+/g).filter(Boolean);
+    vetAluno = [...new Set(txtareaAluno.value.match(/[0-9]+/g).filter(Boolean))];
     a = "";
     txtareaDados.value ="";
 
@@ -142,6 +177,12 @@ function coletar(opcao)
     if(opcao==3){
         ifrIframe1.src= "http://sigeduca.seduc.mt.gov.br/ged/hwmgedmanutencaomatricula.aspx";
         ifrIframe1.addEventListener("load", coletaDados3);
+    }
+        if(opcao==4){
+            ifrIframe1.src = "http://sigeduca.seduc.mt.gov.br/ged/hwmconaluno.aspx";
+            ifrIframe1.addEventListener("load", () => {
+                setTimeout(coletaDados4, 1500);
+            });
     }
 }
 
@@ -427,6 +468,118 @@ function verCheckbox(id) {
     }
 }
 
+//Função consultar dados do aluno com base na matrícula INEP
+async function coletaDados4() {
+  const frameDoc = parent.frames[0].document;
+  const campoCodigo = frameDoc.getElementById("vGEDALUIDINEP");
+  const botaoConsultar = frameDoc.getElementsByName("BCONSULTAR")[0];
+  const tabela = frameDoc.getElementById("GriddetalhesContainerTbl");
+  const viewerErro = frameDoc.getElementById("gxErrorViewer");
+  const campoTxt = document.getElementById("txtDados"); // fora do iframe
+
+  const camposCSV = [
+    { id: "span_vGEDALUIDINEPGRID_", nome: "Matrícula INEP" },
+    { id: "span_vGERPESCODCHAR_", nome: "Código" },
+    { id: "span_vGERPESNOM_", nome: "Aluno" },
+    { id: "span_vGERPESDTANASC_", nome: "Nascimento" },
+    { id: "span_vGERPESNATDSC_", nome: "Natural" },
+    { id: "span_vGERPESNOMMAE_", nome: "Filiação 1" },
+    { id: "span_vGERPESNOMPAI_", nome: "Filiação 2" },
+    { id: "span_vGERPESNOMFIL3_", nome: "Filiação 3" },
+    { id: "", nome: "Observação" }
+  ];
+
+  const cabecalho = camposCSV.map(c => c.nome).join(";") + ";Erro na consulta";
+  if (!campoTxt.value.trim().includes(cabecalho)) {
+    campoTxt.value = cabecalho + "\n";
+  }
+
+  let ultimoErro = "";
+  let ativo = true;
+
+  try {
+    for (let cod of vetAluno) {
+      if (!ativo) break;
+
+      campoCodigo.value = cod;
+      botaoConsultar.click();
+
+      const inicio = Date.now();
+      let resultado = "";
+
+      while (Date.now() - inicio < 5000) {
+        await new Promise(r => setTimeout(r, 300));
+
+        const linhas = frameDoc.querySelectorAll("#GriddetalhesContainerTbl tr");
+        if (linhas.length > 1) {
+          const celulaCodigo = frameDoc.getElementById("span_vGEDALUIDINEPGRID_0001");
+          if (celulaCodigo && celulaCodigo.textContent.trim() === cod.toString()) {
+            // Achou resultado correspondente
+            const registros = [];
+            for (let i = 1; ; i++) {
+              const sufixo = i.toString().padStart(4, "0");
+              const cel = frameDoc.getElementById(`span_vGEDALUIDINEPGRID_${sufixo}`);
+              if (!cel) break;
+
+              const nomeAlunoEl = frameDoc.getElementById(`span_vGERPESNOM_${sufixo}`);
+              const nomeAluno = nomeAlunoEl ? nomeAlunoEl.textContent.trim() : "";
+              registros.push({ sufixo, nomeAluno });
+            }
+
+            let observacao = "";
+            if (registros.length > 1) {
+              const nomes = registros.map(r => r.nomeAluno).filter(n => n).join(", ");
+              observacao = `Nº INEP cadastrado para mais de um aluno: "${nomes}"`;
+            }
+
+            // Monta linhas CSV
+            const linhasResultado = registros.map(r => {
+              const linhaCSV = camposCSV.map(campo => {
+                if (campo.nome === "Observação") return observacao;
+                const el = frameDoc.getElementById(`${campo.id}${r.sufixo}`);
+                return el ? el.textContent.trim().replaceAll(";", ",") : "";
+              }).join(";");
+              return linhaCSV + ";";
+            });
+
+            campoTxt.value += linhasResultado.join("\n") + "\n";
+            resultado = "ok";
+            break;
+          }
+        }
+
+        const erroDiv = viewerErro.querySelector(".erro");
+        if (erroDiv) {
+          const textoErro = erroDiv.textContent.trim();
+          if (textoErro !== ultimoErro) {
+            ultimoErro = textoErro;
+            campoTxt.value += `${cod};;;;;;;;;${textoErro}\n`;
+            resultado = "erro";
+            break;
+          }
+        }
+      }
+
+      if (!resultado) {
+        const continuar = confirm(`Tempo esgotado ao consultar código ${cod}. Deseja continuar?`);
+        campoTxt.value += `${cod};;;;;;;;;Erro: tempo esgotado\n`;
+        if (!continuar) {
+          alert("Consulta interrompida pelo usuário.");
+          ativo = false;
+          break;
+        }
+      }
+    }
+  } finally {
+    ativo = false; // garante término total
+  }
+
+  alert("Consultas finalizadas!");
+  return true;
+}
+
+
+
 
 //BOTÃO EXIBIR ou MINIMIZAR
 function exibir(){
@@ -456,7 +609,7 @@ var divCredit = document.createElement('div');
     divCredit.setAttribute('id','credito1');
     divCredit.setAttribute('name','credito2');
     divCredit.setAttribute('class','menuSCT');
-    divCredit.setAttribute('style','background: #DBDBDB; color: #000; width: 280px; text-align: center;font-weight: bold;position: fixed;z-index: 2002;padding: 5px 0px 0px 5px;bottom: 24px;right: 30px;height: 400px;');
+    divCredit.setAttribute('style','background: #DBDBDB; color: #000; width: 280px; text-align: center;font-weight: bold;position: fixed;z-index: 2002;padding: 5px 0px 0px 5px;bottom: 24px;right: 30px;height: 406px;');
 document.getElementsByTagName('body')[0].appendChild(divCredit);
 
 //Iframe
@@ -515,6 +668,17 @@ btnColetar3.setAttribute('value','Extrair Dados da Matrícula');
 btnColetar3.setAttribute('class','botaoSCT');
 divCredit.appendChild(btnColetar3);
 btnColetar3.onclick = function(){coletar(3)};
+
+divCredit.appendChild(quebralinha); //quebrar linha
+
+//BOTÃO COLETAR DADOS PELO Nº INEP
+var btnColetar4 = document.createElement('input');
+btnColetar4.setAttribute('type','button');
+btnColetar4.setAttribute('name','btnColetar4');
+btnColetar4.setAttribute('value','Extrair dados pelo nº INEP');
+btnColetar4.setAttribute('class','botaoVerde');
+divCredit.appendChild(btnColetar4);
+btnColetar4.onclick = function(){coletar(4)};
 
 //QUEBRA LINHA
 var quebraLinha1 = document.createElement("br");
