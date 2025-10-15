@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.6.0
+// @version       2.6.1
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -133,6 +133,7 @@ const scriptVersion = GM_info.script.version; // Obtém o valor de @version
 
 //Variáveis
 var vetAluno = [0];
+var vetAlunoInep = [0];
 var n = 0;
 var a = "";
 var cabecalho="";
@@ -180,9 +181,7 @@ function coletar(opcao)
     }
         if(opcao==4){
             ifrIframe1.src = "http://sigeduca.seduc.mt.gov.br/ged/hwmconaluno.aspx";
-            ifrIframe1.addEventListener("load", () => {
-                setTimeout(coletaDados4, 1500);
-            });
+            setTimeout(coletaDados4, 1500);
     }
 }
 
@@ -468,14 +467,53 @@ function verCheckbox(id) {
     }
 }
 
-//Função consultar dados do aluno com base na matrícula INEP
+
+//Função buscar dados com base no nº INEP
+// Variáveis globais de controle
+let coletaController = null;
+let coletaAtiva = false;
+
+// Função auxiliar de espera com suporte a cancelamento (remove listener automaticamente)
+function esperar(ms, signal) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      // remove listener não é necessário porque usamos { once: true }
+      resolve();
+    }, ms);
+
+    if (signal) {
+      // registra um listener que executa apenas 1 vez e limpa o timer
+      signal.addEventListener("abort", () => {
+        clearTimeout(timer);
+        reject(new Error("Abortado"));
+      }, { once: true });
+    }
+  });
+}
+
+// Função principal de coleta (robusta contra race conditions)
 async function coletaDados4() {
+  ifrIframe1.removeEventListener("load", coletaDados4);
+  vetAlunoInep = [...new Set(txtareaAluno.value.match(/[0-9]+/g).filter(Boolean))];
   const frameDoc = parent.frames[0].document;
   const campoCodigo = frameDoc.getElementById("vGEDALUIDINEP");
   const botaoConsultar = frameDoc.getElementsByName("BCONSULTAR")[0];
-  const tabela = frameDoc.getElementById("GriddetalhesContainerTbl");
   const viewerErro = frameDoc.getElementById("gxErrorViewer");
   const campoTxt = document.getElementById("txtDados"); // fora do iframe
+
+  // Se já existe uma coleta em andamento → interrompe a anterior
+  if (coletaController) {
+    coletaController.abort();
+    console.warn("Execução anterior abortada para iniciar nova.");
+  }
+
+  // Cria um novo controller SPECÍFICO para esta execução e guarda em variável local
+  const controller = new AbortController();
+  const { signal } = controller;
+
+  // torna este controller o global (aponta global para a execução atual)
+  coletaController = controller;
+  coletaAtiva = true;
 
   const camposCSV = [
     { id: "span_vGEDALUIDINEPGRID_", nome: "Matrícula INEP" },
@@ -495,11 +533,11 @@ async function coletaDados4() {
   }
 
   let ultimoErro = "";
-  let ativo = true;
 
   try {
-    for (let cod of vetAluno) {
-      if (!ativo) break;
+    for (let cod of vetAlunoInep) {
+      // Se esse controller já foi abortado, interrompe imediatamente
+      if (signal.aborted) throw new Error("Execução abortada");
 
       campoCodigo.value = cod;
       botaoConsultar.click();
@@ -508,13 +546,16 @@ async function coletaDados4() {
       let resultado = "";
 
       while (Date.now() - inicio < 5000) {
-        await new Promise(r => setTimeout(r, 300));
+        // espera com cancelamento suportado
+        await esperar(300, signal);
+
+        if (signal.aborted) throw new Error("Execução abortada");
 
         const linhas = frameDoc.querySelectorAll("#GriddetalhesContainerTbl tr");
         if (linhas.length > 1) {
           const celulaCodigo = frameDoc.getElementById("span_vGEDALUIDINEPGRID_0001");
           if (celulaCodigo && celulaCodigo.textContent.trim() === cod.toString()) {
-            // Achou resultado correspondente
+            // Resultado encontrado
             const registros = [];
             for (let i = 1; ; i++) {
               const sufixo = i.toString().padStart(4, "0");
@@ -532,7 +573,7 @@ async function coletaDados4() {
               observacao = `Nº INEP cadastrado para mais de um aluno: "${nomes}"`;
             }
 
-            // Monta linhas CSV
+            // Monta as linhas CSV
             const linhasResultado = registros.map(r => {
               const linhaCSV = camposCSV.map(campo => {
                 if (campo.nome === "Observação") return observacao;
@@ -548,11 +589,12 @@ async function coletaDados4() {
           }
         }
 
-        const erroDiv = viewerErro.querySelector(".erro");
+        const erroDiv = viewerErro ? viewerErro.querySelector(".erro") : null;
         if (erroDiv) {
           const textoErro = erroDiv.textContent.trim();
           if (textoErro !== ultimoErro) {
             ultimoErro = textoErro;
+            // ajuste do número de ';' conforme colunas antes de "Erro na consulta"
             campoTxt.value += `${cod};;;;;;;;;${textoErro}\n`;
             resultado = "erro";
             break;
@@ -565,19 +607,51 @@ async function coletaDados4() {
         campoTxt.value += `${cod};;;;;;;;;Erro: tempo esgotado\n`;
         if (!continuar) {
           alert("Consulta interrompida pelo usuário.");
-          ativo = false;
+          // aborta esta execução ESPECÍFICA (e qualquer outra anterior apontada globalmente)
+          if (coletaController === controller) {
+            // só aborta o controller global se ele for este controller
+            controller.abort();
+          } else {
+            // mesmo que não seja o global (caso raro), aborta localmente
+            controller.abort();
+          }
           break;
         }
       }
     }
+  } catch (e) {
+    // mensagens esperadas para abortos
+    if (e && (e.message === "Abortado" || e.message === "Execução abortada")) {
+      console.warn("Execução abortada com segurança:", e.message);
+    } else {
+      console.error("Erro inesperado em coletaDados4:", e);
+    }
   } finally {
-    ativo = false; // garante término total
+    // LIMPEZA: somente limpar a variável global se ela ainda apontar para este controller
+    if (coletaController === controller) {
+      coletaController = null;
+      coletaAtiva = false;
+    } else {
+      // se a variável global já foi sobrescrita por outra execução, não alteramos
+      // apenas marcamos localmente que esta execução terminou
+    }
+    console.log("coletaDados4 (execução atual) finalizada.");
   }
 
-  alert("Consultas finalizadas!");
+  // Se esta execução não foi abortada, mostramos alerta final (evita múltiplos alerts)
+  if (!signal.aborted) alert("Consultas finalizadas!");
   return true;
 }
 
+// função externa para abortar manualmente
+function abortarColeta() {
+  if (coletaController) {
+    coletaController.abort();
+    // NÃO é setado coletaController = null aqui; o finally da execução que possuir esse controller fará a limpeza segura
+    coletaAtiva = false;
+    alert("Coleta abortada e finalizada completamente.");
+  }
+}
 
 
 
