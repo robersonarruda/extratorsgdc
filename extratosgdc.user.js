@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.7.0
+// @version       2.7.1
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -164,7 +164,8 @@ function coletar(opcao)
     ifrIframe1.removeEventListener("load", coletaDados4);
     n=0;
     vetAluno = [0];
-    vetAluno = [...new Set(txtareaAluno.value.match(/(?<![\p{L}\p{N}])\d{6,7}(?![\p{L}\p{N}])/gu) ?? [])];
+    vetAluno = [...new Set(txtareaAluno.value.match(/(?<!\d)\d{5,6}(?!\d)/g) ?? []
+)];
 
     a = "";
     txtareaDados.value ="";
