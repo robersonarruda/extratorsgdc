@@ -1,15 +1,16 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.6.2
+// @version       2.7.0
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
-// @downloadURL   https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
-// @updateURL     https://github.com/robersonarruda/extratorsgdc/raw/main/extratosgdc.user.js
+// @downloadURL   https://raw.githubusercontent.com/robersonarruda/extratorsgdc/main/extratosgdc.user.js
+// @updateURL     https://raw.githubusercontent.com/robersonarruda/extratorsgdc/main/extratosgdc.user.js
 // @match	      https://*.seduc.mt.gov.br/ged/hwmconaluno.aspx*
 // @match	      http://*.seduc.mt.gov.br/ged/hwmconaluno.aspx*
 // @copyright     2019, Roberson Arruda (robersonarruda@outlook.com)
-// @grant         none
+// @connect      raw.githubusercontent.com
+// @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
 
@@ -163,7 +164,8 @@ function coletar(opcao)
     ifrIframe1.removeEventListener("load", coletaDados4);
     n=0;
     vetAluno = [0];
-    vetAluno = [...new Set(txtareaAluno.value.match(/[0-9]+/g).filter(Boolean))];
+    vetAluno = [...new Set(txtareaAluno.value.match(/(?<![\p{L}\p{N}])\d{6,7}(?![\p{L}\p{N}])/gu) ?? [])];
+
     a = "";
     txtareaDados.value ="";
 
@@ -290,6 +292,7 @@ function coletaDados1() {
         a = a + "\n";
 
         txtareaDados.value = cabecalho+"\n"+a;
+        txtareaDados.scrollTop = txtareaDados.scrollHeight; // rola scroll do txtareaDados
         n=n+1;
         if(n < vetAluno.length){
             ifrIframe1.src = "http://sigeduca.seduc.mt.gov.br/ged/hwtmgedaluno.aspx?"+vetAluno[n]+",,HWMConAluno,DSP,1,0";
@@ -322,6 +325,7 @@ function coletaDados2() {
         a = a + "\n";
 
         txtareaDados.value = cabecalho+"\n"+a;
+        txtareaDados.scrollTop = txtareaDados.scrollHeight; // rola scroll do txtareaDados
         n=n+1;
         if(n < vetAluno.length){
             ifrIframe1.src = "http://sigeduca.seduc.mt.gov.br/ged/hwtmgedaluno1.aspx?"+vetAluno[n]+",,HWMConAluno,DSP,0,1,0,1";
@@ -368,7 +372,7 @@ async function iniColetaDados3(vetAluno) {
         "Observação"
     ].join("; ") + "\n";
 
-    function esperarCarregarElemento(idElemento, valorAntigo, tentativas = 80, intervalo = 50) {
+    function esperarCarregarElemento(idElemento, valorAntigo, tentativas = 20, intervalo = 50) {
         return new Promise((resolve, reject) => {
             let contador = 0;
             let verificar = setInterval(() => {
@@ -436,7 +440,7 @@ async function iniColetaDados3(vetAluno) {
                 dataMatricula.trim(),
                 numMatricula.trim()
             ].join("; ") + "\n";
-
+            txtareaDados.scrollTop = txtareaDados.scrollHeight; // rola scroll do txtareaDados
 
             matCodAntigo = matCodAtual; // Atualiza o código para próxima verificação
         } catch (error) {
@@ -449,6 +453,7 @@ async function iniColetaDados3(vetAluno) {
             let erroAlunoNaoMatriculado = erroElemento ? erroElemento.textContent.trim() : "";
 
             txtareaDados.value += `${codigo.trim()}; ${nomeAluno.trim()}; ${erroAlunoNaoMatriculado ? erroAlunoNaoMatriculado : "O extrator não teve retorno da consulta. Verifique o código deste aluno."}\n`;
+            txtareaDados.scrollTop = txtareaDados.scrollHeight; // rola scroll do txtareaDados
         }
     }
 
@@ -583,6 +588,7 @@ async function coletaDados4() {
             });
 
             campoTxt.value += linhasResultado.join("\n") + "\n";
+            txtareaDados.scrollTop = txtareaDados.scrollHeight; // rola scroll do txtareaDados
             resultado = "ok";
             break;
           }
@@ -595,6 +601,7 @@ async function coletaDados4() {
             ultimoErro = textoErro;
             // ajuste do número de ';' conforme colunas antes de "Erro na consulta"
             campoTxt.value += `${cod};;;;;;;;;${textoErro}\n`;
+            txtareaDados.scrollTop = txtareaDados.scrollHeight; // rola scroll do txtareaDados
             resultado = "erro";
             break;
           }
@@ -604,6 +611,7 @@ async function coletaDados4() {
       if (!resultado) {
         const continuar = confirm(`Tempo esgotado ao consultar código ${cod}. Deseja continuar?`);
         campoTxt.value += `${cod};;;;;;;;;Erro: tempo esgotado\n`;
+        txtareaDados.scrollTop = txtareaDados.scrollHeight; // rola scroll do txtareaDados
         if (!continuar) {
           alert("Consulta interrompida pelo usuário.");
           // aborta esta execução ESPECÍFICA (e qualquer outra anterior apontada globalmente)
@@ -682,7 +690,7 @@ var divCredit = document.createElement('div');
     divCredit.setAttribute('id','credito1');
     divCredit.setAttribute('name','credito2');
     divCredit.setAttribute('class','menuSCT');
-    divCredit.setAttribute('style','background: #DBDBDB; color: #000; width: 280px; text-align: center;font-weight: bold;position: fixed;z-index: 2002;padding: 5px 0px 0px 5px;bottom: 24px;right: 30px;height: 406px;');
+    divCredit.setAttribute('style','color: #000; width: 280px; text-align: center;font-weight: bold;position: fixed;z-index: 2002;padding: 5px 0px 0px 5px;bottom: 24px;right: 30px;height: 418px;');
 document.getElementsByTagName('body')[0].appendChild(divCredit);
 
 //Iframe
@@ -772,6 +780,10 @@ txtareaDados.setAttribute('style','border:1px solid #000000;width: 250px;height:
 txtareaDados.setAttribute('onclick','this.select()');
 txtareaDados.readOnly = true;
 divCredit.appendChild(txtareaDados);
+//Ativa a rolagem automática do txtareaDados sempre que o conteúdo for atualizado.
+txtareaDados.addEventListener('input', () => {
+  txtareaDados.scrollTop = txtareaDados.scrollHeight;
+});
 
 //BOTAO SALVAR EM TXT
 var btnSalvarTxt = document.createElement('input');
@@ -806,3 +818,87 @@ span1.appendChild(br1);
 span1 = document.createElement('span');
 span1.textContent = `${scriptName} v${scriptVersion}`
 divCredito.appendChild(span1);
+
+
+/*======================== VERIFICAR ATUALIZAÇÃO ==========================*/
+async function verificarAtualizacao() {
+
+    const VERSAO_ATUAL = GM_info.script.version;
+    const URL_SCRIPT = GM_info.script.updateURL;
+
+    try {
+
+        GM_xmlhttpRequest({
+
+            method: 'GET',
+            url: URL_SCRIPT + '?t=' + Date.now(),
+
+            onload: function(resposta) {
+
+                const texto = resposta.responseText;
+
+                const match = texto.match(/@version\s+([0-9.]+)/);
+
+                if (!match) return;
+
+                const versaoRemota = match[1];
+
+                if (compararVersoes(versaoRemota, VERSAO_ATUAL) > 0) {
+
+                    if (!divCredito) return;
+
+                    const link = document.createElement('a');
+
+                    link.href = URL_SCRIPT;
+                    link.target = '_blank';
+
+                    link.style.color = 'red';
+                    link.style.fontWeight = 'bold';
+                    link.style.marginLeft = '10px';
+
+                    link.textContent =
+                        '>>Atualize para a versão ' + versaoRemota +'<<';
+
+                    br1 = document.createElement('br'); //quebra de linha
+                    span1.appendChild(br1);
+                    divCredito.appendChild(link);
+                }
+            },
+
+            onerror: function(erro) {
+
+                console.error(
+                    'Erro ao verificar atualização:',
+                    erro
+                );
+            }
+        });
+
+    } catch (erro) {
+
+        console.error(
+            'Erro geral:',
+            erro
+        );
+    }
+}
+
+function compararVersoes(v1, v2) {
+
+    const a = v1.split('.').map(Number);
+    const b = v2.split('.').map(Number);
+
+    const tamanho = Math.max(a.length, b.length);
+
+    for (let i = 0; i < tamanho; i++) {
+
+        const n1 = a[i] || 0;
+        const n2 = b[i] || 0;
+
+        if (n1 > n2) return 1;
+        if (n1 < n2) return -1;
+    }
+
+    return 0;
+}
+verificarAtualizacao()
