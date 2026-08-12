@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.7.2
+// @version       2.7.3
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -232,6 +232,7 @@ function coletaDados1() {
         a = a + vetAluno[n] +";"; cabecalho = "Cod Aluno;"; //Cod Aluno
         a = a + parent.frames[0].document.getElementById('span_CTLGEDALUIDINEP').innerHTML +";"; cabecalho = cabecalho+"Nº INEP;"; //Matrícula INEP
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESNOM').innerHTML +";"; cabecalho = cabecalho+"Aluno;";
+        a = a + parent.frames[0].document.getElementById('span_CTLGERPESNOMSOC').innerHTML +";"; cabecalho = cabecalho+"Nome Social;"; // Nome Social
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESCPF').innerHTML.replace(/^([\d]{3})([\d]{3})([\d]{3})([\d]{2})$/, "$1.$2.$3-$4") +";"; cabecalho = cabecalho+"CPF do Aluno;";
         a = a + parent.frames[0].document.getElementById('span_CTLGERPESRACA').innerHTML +";"; cabecalho = cabecalho+"Cor ou Raça;";
         a = a + grupoSocial+";"; cabecalho = cabecalho+"Grupo Social;";
