@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.8.1
+// @version       2.8.2
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -782,9 +782,9 @@ async function coletaDados5() {
 
         const codigoAluno = String(vetAluno[indiceAluno]).trim();
 
-        console.log(
+        txtareaDados.value =
             `Processando aluno ${indiceAluno + 1}/${vetAluno.length}: ${codigoAluno}`
-        );
+        ;
 
 
         // --------------------------------------------------------
@@ -967,9 +967,9 @@ async function coletaDados5() {
             });
 
 
-            console.log(
+            txtareaDados.value =
                 `Aluno ${codigoAluno}: nenhum atestado encontrado.`
-            );
+            ;
 
         }
 
@@ -979,9 +979,9 @@ async function coletaDados5() {
 
         else {
 
-            console.log(
+            txtareaDados.value =
                 `Aluno ${codigoAluno}: ${quantidadeLinhas} atestado(s) encontrado(s).`
-            );
+            ;
 
 
             for (
@@ -1038,9 +1038,9 @@ async function coletaDados5() {
                 });
 
 
-                console.log(
+                txtareaDados.value =
                     `Atestado localizado: ${codigoAtestado}`
-                );
+                ;
             }
         }
     }
@@ -1050,9 +1050,9 @@ async function coletaDados5() {
     // 4. CONSULTA INDIVIDUAL DE CADA ATESTADO
     // ============================================================
 
-    console.log(
+    txtareaDados.value =
         `Total de registros encontrados: ${resultados.length}`
-    );
+    ;
 
 
     for (let i = 0; i < resultados.length; i++) {
@@ -1070,9 +1070,9 @@ async function coletaDados5() {
         }
 
 
-        console.log(
+        txtareaDados.value =
             `Consultando atestado ${i + 1}/${resultados.length}: ${registro.codigoAtestado}`
-        );
+        ;
 
 
         // --------------------------------------------------------
@@ -1212,11 +1212,6 @@ async function coletaDados5() {
                         textoElemento("span_GEDATEALTPOR");
 
 
-                    console.log(
-                        "Dados coletados:",
-                        registro
-                    );
-
                 } catch (erro) {
 
                     console.error(
@@ -1296,16 +1291,15 @@ async function coletaDados5() {
 
     txtareaDados.value = linhas.join("\n");
 
+	/*
+	// Retorna também o objeto,
+    // para aproveitamento futuro no próprio script.
 
-    console.log(
+	console.log(
         "Processamento concluído.",
         resultados
     );
-
-
-    // Retorna também o objeto, caso você queira aproveitar
-    // posteriormente no próprio script.
-    return resultados;
+    return resultados; */
 }
 
 //BOTÃO EXIBIR ou MINIMIZAR
