@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.8.2
+// @version       2.8.3
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -819,26 +819,80 @@ async function coletaDados5() {
             return;
         }
 
-        campoAluno.value = codigoAluno;
+campoAluno.value = codigoAluno;
+
+
+// --------------------------------------------------------
+// Insere controle na span do nome do aluno
+// --------------------------------------------------------
+
+const spanNomeAluno =
+    parent.frames[0].document.getElementById(
+        "span_vGRHDESCRICAO"
+    );
+
+if (!spanNomeAluno) {
+    console.error(
+        "span_vGRHDESCRICAO não encontrada."
+    );
+    return;
+}
+
+const controleNomeAluno =
+    "__CONTROLE_ATUALIZACAO_NOME__";
+
+spanNomeAluno.textContent = controleNomeAluno;
+
+
+// --------------------------------------------------------
+// Executa onblur()
+// --------------------------------------------------------
+
+campoAluno.onblur && campoAluno.onblur();
+
+// Também dispara o evento de blur para garantir que
+// event listeners eventualmente associados sejam executados.
+campoAluno.dispatchEvent(
+    new Event("blur", {
+        bubbles: true
+    })
+);
 
 
         // --------------------------------------------------------
-        // Executa onblur()
+        // Aguarda a atualização da span do nome
+        //
+        // O SIGEDUCA deverá remover o conteúdo de controle
+        // quando reconstruir/atualizar a span.
         // --------------------------------------------------------
 
-        campoAluno.onblur && campoAluno.onblur();
+        try {
 
-        // Também dispara o evento de blur para garantir que
-        // event listeners eventualmente associados sejam executados.
-        campoAluno.dispatchEvent(
-            new Event("blur", {
-                bubbles: true
-            })
-        );
+            await esperarCondicao(() => {
 
+                const span =
+                      parent.frames[0].document.getElementById(
+                          "span_vGRHDESCRICAO"
+                      );
 
-        // Pequena espera para o sistema processar o campo
-        await esperar(100);
+                if (!span) {
+                    return false;
+                }
+
+                return !span.textContent.includes(
+                    controleNomeAluno
+                );
+
+            }, 20000, 100);
+
+        } catch (erro) {
+
+            console.warn(
+                `Tempo limite aguardando atualização do nome do aluno ${codigoAluno}.`
+            );
+
+            continue;
+        }
 
 
         // --------------------------------------------------------
@@ -1290,6 +1344,7 @@ async function coletaDados5() {
     // ============================================================
 
     txtareaDados.value = linhas.join("\n");
+    alert('Extração concluída!');
 
 	/*
 	// Retorna também o objeto,
