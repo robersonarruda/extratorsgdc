@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.7.3
+// @version       2.8.0
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -162,10 +162,10 @@ function coletar(opcao)
     ifrIframe1.removeEventListener("load", coletaDados2);
     ifrIframe1.removeEventListener("load", coletaDados3);
     ifrIframe1.removeEventListener("load", coletaDados4);
+    ifrIframe1.removeEventListener("load", coletaDados5);
     n=0;
     vetAluno = [0];
-    vetAluno = [...new Set(txtareaAluno.value.match(/(?<!\d)\d{6,7}(?!\d)/g) ?? []
-)];
+    vetAluno = [...new Set(txtareaAluno.value.match(/(?<!\d)\d{6,7}(?!\d)/g) ?? [])];
 
     a = "";
     txtareaDados.value ="";
@@ -182,9 +182,13 @@ function coletar(opcao)
         ifrIframe1.src= "http://sigeduca.seduc.mt.gov.br/ged/hwmgedmanutencaomatricula.aspx";
         ifrIframe1.addEventListener("load", coletaDados3);
     }
-        if(opcao==4){
-            ifrIframe1.src = "http://sigeduca.seduc.mt.gov.br/ged/hwmconaluno.aspx";
-            setTimeout(coletaDados4, 1500);
+    if(opcao==4){
+        ifrIframe1.src = "http://sigeduca.seduc.mt.gov.br/ged/hwmconaluno.aspx";
+        setTimeout(coletaDados4, 1500);
+    }
+    if(opcao==5){
+        ifrIframe1.src = "http://sigeduca.seduc.mt.gov.br/ged/hwmgedatestado.aspx";
+        setTimeout(coletaDados5, 1500);
     }
 }
 
@@ -662,7 +666,639 @@ function abortarColeta() {
   }
 }
 
+///////////////////////////////////////////////////////////
+///////// COLETAR DADOS DE ATESTADOS DOS ALUNOS ///////////
+///////////////////////////////////////////////////////////
+async function coletaDados5() {
 
+    const frame = parent.frames[0];
+    const doc = frame.document;
+
+    const resultados = [];
+
+    // ============================================================
+    // FUNÇÕES AUXILIARES
+    // ============================================================
+
+    function esperar(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function esperarCondicao(condicao, timeout = 15000, intervalo = 100) {
+        return new Promise((resolve, reject) => {
+
+            const inicio = Date.now();
+
+            const verificar = () => {
+
+                try {
+                    if (condicao()) {
+                        resolve(true);
+                        return;
+                    }
+                } catch (e) {
+                    // Continua tentando
+                }
+
+                if (Date.now() - inicio >= timeout) {
+                    reject(new Error("Tempo limite excedido aguardando condição."));
+                    return;
+                }
+
+                setTimeout(verificar, intervalo);
+            };
+
+            verificar();
+        });
+    }
+
+    function formatarNumero(numero, casas = 4) {
+        return String(numero).padStart(casas, "0");
+    }
+
+    function textoElemento(id) {
+        const elemento = parent.frames[0].document.getElementById(id);
+
+        if (!elemento) {
+            return "";
+        }
+
+        return (elemento.innerText || "").trim();
+    }
+
+    function valorElemento(id) {
+        const elemento = parent.frames[0].document.getElementById(id);
+
+        if (!elemento) {
+            return "";
+        }
+
+        return elemento.value || "";
+    }
+
+    function textoOptionSelecionado(id) {
+
+        const elemento = parent.frames[0].document.getElementById(id);
+
+        if (!elemento || elemento.tagName !== "SELECT") {
+            return "";
+        }
+
+        const option = elemento.options[elemento.selectedIndex];
+
+        return option ? option.text.trim() : "";
+    }
+
+
+    // ============================================================
+    // 1. LOCALIZA A TABELA
+    // ============================================================
+
+    const tabela = parent.frames[0].document.getElementById(
+        "GriddetalhesContainerTbl"
+    );
+
+    if (!tabela) {
+        console.error(
+            "Tabela GriddetalhesContainerTbl não encontrada."
+        );
+        return;
+    }
+
+
+    // ============================================================
+    // 2. PROCESSA CADA ALUNO
+    // ============================================================
+
+    for (let indiceAluno = 0; indiceAluno < vetAluno.length; indiceAluno++) {
+
+        const codigoAluno = String(vetAluno[indiceAluno]).trim();
+
+        console.log(
+            `Processando aluno ${indiceAluno + 1}/${vetAluno.length}: ${codigoAluno}`
+        );
+
+
+        // --------------------------------------------------------
+        // Insere o elemento de controle na tabela
+        // --------------------------------------------------------
+
+        const tabelaAtual = parent.frames[0].document.getElementById(
+            "GriddetalhesContainerTbl"
+        );
+
+        if (!tabelaAtual) {
+            console.error("Tabela não encontrada antes da consulta.");
+            continue;
+        }
+
+        tabelaAtual.setAttribute(
+            "data-controle-atestado",
+            String(Date.now())
+        );
+
+
+        // --------------------------------------------------------
+        // Preenche o código do aluno
+        // --------------------------------------------------------
+
+        const campoAluno = parent.frames[0].document.getElementById(
+            "vGEDALUCOD"
+        );
+
+        if (!campoAluno) {
+            console.error("Campo vGEDALUCOD não encontrado.");
+            return;
+        }
+
+        campoAluno.value = codigoAluno;
+
+
+        // --------------------------------------------------------
+        // Executa onblur()
+        // --------------------------------------------------------
+
+        campoAluno.onblur && campoAluno.onblur();
+
+        // Também dispara o evento de blur para garantir que
+        // event listeners eventualmente associados sejam executados.
+        campoAluno.dispatchEvent(
+            new Event("blur", {
+                bubbles: true
+            })
+        );
+
+
+        // Pequena espera para o sistema processar o campo
+        await esperar(100);
+
+
+        // --------------------------------------------------------
+        // Clica em BCONSULTAR
+        // --------------------------------------------------------
+
+        const botaoConsultar = parent.frames[0].document.querySelector(
+            '[name="BCONSULTAR"]'
+        );
+
+        if (!botaoConsultar) {
+            console.error("Botão BCONSULTAR não encontrado.");
+            return;
+        }
+
+        botaoConsultar.click();
+
+
+        // --------------------------------------------------------
+        // Aguarda a tabela ser substituída/atualizada.
+        //
+        // O atributo data-controle-atestado deverá desaparecer.
+        // --------------------------------------------------------
+
+        try {
+
+            await esperarCondicao(() => {
+
+                const tabelaDepois =
+                    parent.frames[0].document.getElementById(
+                        "GriddetalhesContainerTbl"
+                    );
+
+                if (!tabelaDepois) {
+                    return false;
+                }
+
+                return !tabelaDepois.hasAttribute(
+                    "data-controle-atestado"
+                );
+
+            }, 20000, 100);
+
+        } catch (erro) {
+
+            console.warn(
+                "Tempo limite aguardando atualização da tabela para o aluno:",
+                codigoAluno
+            );
+
+            continue;
+        }
+
+
+        // --------------------------------------------------------
+        // Pequena margem para garantir que o conteúdo da tabela
+        // terminou de ser reconstruído.
+        // --------------------------------------------------------
+
+        await esperar(100);
+
+
+        // --------------------------------------------------------
+        // Obtém a tabela já atualizada
+        // --------------------------------------------------------
+
+        const tabelaResultado =
+            parent.frames[0].document.getElementById(
+                "GriddetalhesContainerTbl"
+            );
+
+        if (!tabelaResultado) {
+            console.error("Tabela desapareceu após atualização.");
+            continue;
+        }
+
+
+        // ========================================================
+        // 3. VERIFICA SE EXISTEM ATESTADOS
+        // ========================================================
+
+        const quantidadeLinhas =
+            tabelaResultado.rows.length - 1;
+
+
+        // ========================================================
+        // 3A. NÃO EXISTEM ATESTADOS
+        // ========================================================
+
+        if (quantidadeLinhas <= 0) {
+
+            const nomeAluno =
+                textoElemento("span_vGRHDESCRICAO");
+
+
+            let observacao = "";
+
+            const errorViewer =
+                parent.frames[0].document.getElementById(
+                    "gxErrorViewer"
+                );
+
+            if (errorViewer) {
+
+                const erro =
+                    errorViewer.querySelector("div.erro");
+
+                if (erro) {
+                    observacao = (erro.innerText || "").trim();
+                }
+            }
+
+
+            resultados.push({
+                codigoAtestado: "",
+                codigoAluno: codigoAluno,
+                nomeAluno: nomeAluno,
+                dataInicio: "",
+                dataFim: "",
+                tipoJustificativa: "",
+                observacao: observacao,
+                dataInclusao: "",
+                incluidoPor: "",
+                alteradoEm: "",
+                alteradoPor: ""
+            });
+
+
+            console.log(
+                `Aluno ${codigoAluno}: nenhum atestado encontrado.`
+            );
+
+        }
+
+        // ========================================================
+        // 3B. EXISTEM ATESTADOS
+        // ========================================================
+
+        else {
+
+            console.log(
+                `Aluno ${codigoAluno}: ${quantidadeLinhas} atestado(s) encontrado(s).`
+            );
+
+
+            for (
+                let numeroAtestado = 1;
+                numeroAtestado <= quantidadeLinhas;
+                numeroAtestado++
+            ) {
+
+                const numeroFormatado =
+                    formatarNumero(numeroAtestado, 4);
+
+                const idCodigo =
+                    "span_vGEDATECOD_" + numeroFormatado;
+
+                const elementoCodigo =
+                    parent.frames[0].document.getElementById(
+                        idCodigo
+                    );
+
+
+                if (!elementoCodigo) {
+
+                    console.warn(
+                        `Elemento ${idCodigo} não encontrado para o aluno ${codigoAluno}.`
+                    );
+
+                    continue;
+                }
+
+
+                const codigoAtestado =
+                    (elementoCodigo.innerText || "").trim();
+
+
+                if (!codigoAtestado) {
+                    continue;
+                }
+
+
+                resultados.push({
+                    codigoAtestado: codigoAtestado,
+                    codigoAluno: codigoAluno,
+                    nomeAluno: textoElemento("span_vGRHDESCRICAO"),
+
+                    dataInicio: "",
+                    dataFim: "",
+                    tipoJustificativa: "",
+                    observacao: "",
+
+                    dataInclusao: "",
+                    incluidoPor: "",
+                    alteradoEm: "",
+                    alteradoPor: ""
+                });
+
+
+                console.log(
+                    `Atestado localizado: ${codigoAtestado}`
+                );
+            }
+        }
+    }
+
+
+    // ============================================================
+    // 4. CONSULTA INDIVIDUAL DE CADA ATESTADO
+    // ============================================================
+
+    console.log(
+        `Total de registros encontrados: ${resultados.length}`
+    );
+
+
+    for (let i = 0; i < resultados.length; i++) {
+
+        const registro = resultados[i];
+
+
+        // --------------------------------------------------------
+        // Se não existe código de atestado, significa que esse
+        // aluno não possui atestado. Não precisa abrir página.
+        // --------------------------------------------------------
+
+        if (!registro.codigoAtestado) {
+            continue;
+        }
+
+
+        console.log(
+            `Consultando atestado ${i + 1}/${resultados.length}: ${registro.codigoAtestado}`
+        );
+
+
+        // --------------------------------------------------------
+        // Remove qualquer onload anterior
+        // --------------------------------------------------------
+
+        if (typeof ifrIframe1 !== "undefined" && ifrIframe1) {
+            ifrIframe1.onload = null;
+        }
+
+
+        // --------------------------------------------------------
+        // Promessa que será resolvida quando o iframe carregar
+        // --------------------------------------------------------
+
+        await new Promise((resolve) => {
+
+            let finalizado = false;
+
+            const finalizar = () => {
+
+                if (finalizado) {
+                    return;
+                }
+
+                finalizado = true;
+
+                if (typeof ifrIframe1 !== "undefined" && ifrIframe1) {
+                    ifrIframe1.onload = null;
+                }
+
+                resolve();
+            };
+
+
+            if (typeof ifrIframe1 === "undefined" || !ifrIframe1) {
+
+                console.error(
+                    "ifrIframe1 não encontrado."
+                );
+
+                finalizar();
+                return;
+            }
+
+
+            // ----------------------------------------------------
+            // Define o novo onload
+            // ----------------------------------------------------
+
+            ifrIframe1.onload = async function () {
+
+                try {
+
+                    // Pequena espera para garantir que a página
+                    // terminou de disponibilizar os elementos.
+                    await esperar(100);
+
+
+                    // --------------------------------------------
+                    // Código do aluno
+                    // --------------------------------------------
+
+                    registro.codigoAluno =
+                        valorElemento("GEDALUCOD");
+
+
+                    // --------------------------------------------
+                    // Nome do aluno
+                    // --------------------------------------------
+
+                    registro.nomeAluno =
+                        textoElemento("span_GEDALUNOM");
+
+
+                    // --------------------------------------------
+                    // Data início
+                    // --------------------------------------------
+
+                    registro.dataInicio =
+                        valorElemento("GEDATEPERINI");
+
+
+                    // --------------------------------------------
+                    // Data fim
+                    // --------------------------------------------
+
+                    registro.dataFim =
+                        valorElemento("GEDATEPERFIN");
+
+
+                    // --------------------------------------------
+                    // Tipo de justificativa
+                    // --------------------------------------------
+
+                    registro.tipoJustificativa =
+                        textoOptionSelecionado("GEDATETIPO");
+
+
+                    // --------------------------------------------
+                    // Observação
+                    // --------------------------------------------
+
+                    registro.observacao =
+                        valorElemento("GEDATEOBS");
+
+
+                    // --------------------------------------------
+                    // Data da inclusão
+                    // --------------------------------------------
+
+                    registro.dataInclusao =
+                        textoElemento("span_GEDATEINCEM");
+
+
+                    // --------------------------------------------
+                    // Incluído por
+                    // --------------------------------------------
+
+                    registro.incluidoPor =
+                        textoElemento("span_GEDATEINCPOR");
+
+
+                    // --------------------------------------------
+                    // Alterado em
+                    // --------------------------------------------
+
+                    registro.alteradoEm =
+                        textoElemento("span_GEDATEALTEM");
+
+
+                    // --------------------------------------------
+                    // Alterado por
+                    // --------------------------------------------
+
+                    registro.alteradoPor =
+                        textoElemento("span_GEDATEALTPOR");
+
+
+                    console.log(
+                        "Dados coletados:",
+                        registro
+                    );
+
+                } catch (erro) {
+
+                    console.error(
+                        "Erro ao coletar dados do atestado:",
+                        registro.codigoAtestado,
+                        erro
+                    );
+
+                } finally {
+
+                    finalizar();
+                }
+            };
+
+
+            // ----------------------------------------------------
+            // Carrega a página do atestado
+            // ----------------------------------------------------
+
+            ifrIframe1.src =
+                "http://sigeduca.seduc.mt.gov.br/ged/ttgedatestado.aspx?" +
+                registro.codigoAtestado +
+                ",HWMGedAtestado,UPD";
+        });
+    }
+
+
+    // ============================================================
+    // 5. MONTA O CSV/TEXTO FINAL
+    // ============================================================
+
+    const linhas = [];
+
+
+    // Cabeçalho
+    linhas.push(
+        [
+            "código do atestado",
+            "código do aluno",
+            "nome do aluno",
+            "data inicio",
+            "data fim",
+            "tipo de justificativa",
+            "observação",
+            "data da inclusão",
+            "incluído por",
+            "alterado em",
+            "alterado por"
+        ].join(";")
+    );
+
+
+    // Dados
+    for (const registro of resultados) {
+
+        linhas.push(
+            [
+                registro.codigoAtestado,
+                registro.codigoAluno,
+                registro.nomeAluno,
+                registro.dataInicio,
+                registro.dataFim,
+                registro.tipoJustificativa,
+                registro.observacao,
+                registro.dataInclusao,
+                registro.incluidoPor,
+                registro.alteradoEm,
+                registro.alteradoPor
+            ].join(";")
+        );
+    }
+
+
+    // ============================================================
+    // 6. JOGA O RESULTADO NO TEXTAREA
+    // ============================================================
+
+    txtareaDados.value = linhas.join("\n");
+
+
+    console.log(
+        "Processamento concluído.",
+        resultados
+    );
+
+
+    // Retorna também o objeto, caso você queira aproveitar
+    // posteriormente no próprio script.
+    return resultados;
+}
 
 //BOTÃO EXIBIR ou MINIMIZAR
 function exibir(){
@@ -692,7 +1328,7 @@ var divCredit = document.createElement('div');
     divCredit.setAttribute('id','credito1');
     divCredit.setAttribute('name','credito2');
     divCredit.setAttribute('class','menuSCT');
-    divCredit.setAttribute('style','color: #000; width: 280px; text-align: center;font-weight: bold;position: fixed;z-index: 2002;padding: 5px 0px 0px 5px;bottom: 24px;right: 30px;height: 418px;');
+    divCredit.setAttribute('style','color: #000; width: 280px; text-align: center;font-weight: bold;position: fixed;z-index: 2002;padding: 5px 0px 0px 5px;bottom: 24px;right: 30px;height: 438px;');
 document.getElementsByTagName('body')[0].appendChild(divCredit);
 
 //Iframe
@@ -762,6 +1398,15 @@ btnColetar4.setAttribute('value','Extrair dados pelo nº INEP');
 btnColetar4.setAttribute('class','botaoVerde');
 divCredit.appendChild(btnColetar4);
 btnColetar4.onclick = function(){coletar(4)};
+
+//BOTÃO COLETAR DADOS PELO Nº INEP
+var btnColetar5 = document.createElement('input');
+btnColetar5.setAttribute('type','button');
+btnColetar5.setAttribute('name','btnColetar5');
+btnColetar5.setAttribute('value','Extrair Atestados Lançados');
+btnColetar5.setAttribute('class','botaoSCT');
+divCredit.appendChild(btnColetar5);
+btnColetar5.onclick = function(){coletar(5)};
 
 //QUEBRA LINHA
 var quebraLinha1 = document.createElement("br");
