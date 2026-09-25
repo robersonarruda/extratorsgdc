@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Extrator Contatos Sigeduca
-// @version       2.8.0
+// @version       2.8.1
 // @description   Consulta e salva dados de contato dos alunos do sigeduca.
 // @author        Roberson Arruda
 // @homepage      https://github.com/robersonarruda/extratorsgdc/blob/main/extratosgdc.user.js
@@ -716,6 +716,14 @@ async function coletaDados5() {
         return String(numero).padStart(casas, "0");
     }
 
+    //FUNÇÃO PARA REMOVER QUEBRAS DE LINHAS ETC QUE COMPROMETEM O CSV.
+    function limparTexto(texto) {
+        return String(texto || "")
+            .replace(/[\r\n]+/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
     function textoElemento(id) {
         const elemento = parent.frames[0].document.getElementById(id);
 
@@ -723,7 +731,7 @@ async function coletaDados5() {
             return "";
         }
 
-        return (elemento.innerText || "").trim();
+        return limparTexto(elemento.innerText);
     }
 
     function valorElemento(id) {
@@ -733,7 +741,7 @@ async function coletaDados5() {
             return "";
         }
 
-        return elemento.value || "";
+        return limparTexto(elemento.value);
     }
 
     function textoOptionSelecionado(id) {
